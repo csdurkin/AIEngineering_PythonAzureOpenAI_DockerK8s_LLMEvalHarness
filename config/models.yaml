@@ -1,0 +1,35 @@
+# Deployments the harness can call, keyed by Azure deployment name.
+# Prices are USD per million tokens (Global Standard, pay as you go).
+# VERIFY against the Azure OpenAI pricing page before citing cost figures.
+# Reasoning models bill their hidden reasoning tokens as output tokens.
+
+models:
+  agent-gpt-4.1-mini:
+    model: gpt-4.1-mini
+    version: "2025-04-14"
+    reasoning: false
+    input_per_mtok: 0.40
+    output_per_mtok: 1.60
+  judge-gpt-5-mini-2:
+    model: gpt-5-mini
+    version: "2025-08-07"
+    reasoning: true
+    input_per_mtok: 0.25
+    output_per_mtok: 2.00
+  challenger-gpt-5-mini:
+    model: gpt-5-mini
+    version: "2025-08-07"
+    reasoning: true
+    input_per_mtok: 0.25
+    output_per_mtok: 2.00
+  # Offline mocks for tests and CI. Nominal prices so the cost pipeline is exercised.
+  mock-agent:
+    model: mock
+    reasoning: false
+    input_per_mtok: 0.40
+    output_per_mtok: 1.60
+  mock-judge:
+    model: mock
+    reasoning: false
+    input_per_mtok: 0.25
+    output_per_mtok: 2.00
