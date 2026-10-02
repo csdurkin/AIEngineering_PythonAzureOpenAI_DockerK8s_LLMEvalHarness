@@ -1,28 +1,53 @@
-# Deployments the harness can call, keyed by Azure deployment name.
-# Prices are USD per million tokens (Global Standard, pay as you go).
-# VERIFY against the Azure OpenAI pricing page before citing cost figures.
-# Reasoning models bill their hidden reasoning tokens as output tokens.
+# Seen in models.yaml are the deployments that the harness can called, keyed by Azure deployment name. 
+
+# Notes for future comparison of model costs: 
+    # Cost are set by USD per million tokens (Global Standard, pay as you go).
+    # Verify against Azure OpenAI pricing page before citing cost figures in analysis.
+    # Reasoning models bill hidden reasoning tokens as output tokens. 
 
 models:
-  agent-gpt-4.1-mini:
-    model: gpt-4.1-mini
-    version: "2025-04-14"
-    reasoning: false
-    input_per_mtok: 0.40
-    output_per_mtok: 1.60
+
+
+  #AGENT (MAPPING): system under test
+    #Where found: Used in agent.py, inside RagAgent.answer()
+    #What it receives: 
+      # prompt: system defined rules, answer only from context, say "I don't know" otherwise, refuse unsafe requests)
+      # context: retrieved paragraphs
+      # Question: what a user would ask, in this case these come form the test cases of cases.yaml
+
+  agent-gpt-4.1-mini:                 #Key: the Azure deployment name; code calls this, not the model name
+    model: gpt-4.1-mini               #Model the deployment runs (used for reference and reporting)
+    version: "2025-04-14"             #Pinned model snapshot; Quoted so read as text not date
+    reasoning: false                  #Not a reasoning model, client sends temperature = 0. Controls how random a model's word choices are (how adventurous of a model). At 0, repeatable; 0.7, general variety, chatting; 1 or higher: creative, less predicatable, writing
+    input_per_mtok: 0.40              #Assumption, USD per million input of tokens
+    output_per_mtok: 1.60             #Assumption, USD per million output of tokens
+
+
+  #JUDGE (Mapping): the test marker / grader
+    #Where found: in metrics.py, inside relevance. 
+    #What it receives: question and agent's answer, plus rubric asking for a 1 to 5 on relevance score
+    #What it returns: JSON, such as {"score": 4, "reason": "..."}. Code uses this to convert to a 0 to 1 score
   judge-gpt-5-mini-2:
     model: gpt-5-mini
     version: "2025-08-07"
     reasoning: true
     input_per_mtok: 0.25
     output_per_mtok: 2.00
+
+
+  #CHALLENGER (MAPPING): Secondary agent, same code path, used for comparison
+    #Where it's used / what is receives: same code path as agent. 
   challenger-gpt-5-mini:
     model: gpt-5-mini
     version: "2025-08-07"
-    reasoning: true
+    reasoning: true             #gpt-5-mini always reasons, so must be set as true
     input_per_mtok: 0.25
     output_per_mtok: 2.00
-  # Offline mocks for tests and CI. Nominal prices so the cost pipeline is exercised.
+
+
+  # Offline mocks for tests and CI. 
+  # Fake stand in for something real: nominal prices so the cost pipeline is exercised.
+  #Where will be used: in automated tests and github actions. Live evaluation will never use this. 
   mock-agent:
     model: mock
     reasoning: false
