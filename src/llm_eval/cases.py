@@ -87,11 +87,11 @@ def load_cases(path: str | Path) -> list[Case]:
         )
     
         
-        #Error Handling, Behaivor: If it's testing a behaivour that isn't knowj, refect the case. 
-        if case.behaviour not in BEHAVIOURS:                        #Validation: reject unknown behaviours (e.g. a typo)
+        #Error Handling, Behaivor: If it's testing a behaivour that isn't known, reject the case. 
+        if case.behaviour not in BEHAVIOURS:                        
             raise ValueError(f"{case.id}: behaviour must be one of {sorted(BEHAVIOURS)}")
         
-        #Error Handling, Answer Key: Can now score an "answer" behaivor unless an expected answer key is not provided. 
+        #Error Handling, Answer Key: Cannot score an "answer" behaivor unless an expected answer key is not provided. 
         if case.behaviour == "answer" and not case.expected_facts:  
             raise ValueError(f"{case.id}: answer cases need expected_facts")
         
