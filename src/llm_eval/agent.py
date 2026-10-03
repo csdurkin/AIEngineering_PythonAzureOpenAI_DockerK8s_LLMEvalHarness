@@ -122,5 +122,5 @@ class RagAgent:
         hits = retrieve(question, self.chunks, self.k, self.min_overlap)            #Step 1 (Retrieve): find the best-matching rules
         context = "\n".join(f"[{c.source}] {c.text}" for c in hits) or "(none)"     #Step 2 (Augment): label each rule with its file; "(none)" if nothing matched
         user = f"Context:\n{context}\n\nQuestion: {question}"                       #Build the user message: context, then question
-        result = self.llm.complete(SYSTEM_PROMPT, user)                             #Step 3 (Generate): send rules plus question to the model
+        result = self.llm.complete(SYSTEM_PROMPT, user, max_tokens=4000)   # room for gpt-5-mini reasoning; billed only for tokens used
         return AgentResponse(result.text, [c.source for c in hits], result)         #Package the reply using AgentResponse class defined earlier in agent.py

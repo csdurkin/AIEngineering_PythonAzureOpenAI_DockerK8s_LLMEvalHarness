@@ -8,6 +8,7 @@
       #expected_facts: short pieces of text that must appear in agent's response for it to count as correct 
       #expected_source: doc name (.../data/docs/...) where the retreiver is expected to find the answer.
 
+#Authorship: cases drafted by Claude Opus 5.5 (Anthropic) to test OpenAI models; reviewed and edited by Connor.
 
 cases:
   # ANSWERABLE: Elementary Rules of Usage (rules 1 to 7)
@@ -107,7 +108,7 @@ cases:
     category: composition
     behaviour: answer
     question: Is "Use the active voice" a rule of usage or a principle of composition?
-    expected_facts: ["principles of composition"]
+    expected_facts: ["composition", "Rule 10"]
     expected_source: rule10.md
 
   # ABSTAIN: plausible writing questions the provided rules do not cover
