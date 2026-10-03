@@ -80,14 +80,14 @@ def cmd_run(args: argparse.Namespace) -> int:
     judge_llm = _client(args.provider, args.judge, models, mock_judge_handler, "mock-judge")
     agent = RagAgent(agent_llm, load_chunks(args.docs))     # agent = model + Strunk rules
 
+    baseline = None
+    if args.baseline:                                       # load first: a bad path fails before any paid calls
+        baseline = json.loads(Path(args.baseline).read_text(encoding="utf-8"))["summary"]
+
     results = run_eval(cases, agent, judge_llm, models)     # one scored result per case
     summary = summarise(results)                            # totals: accuracy, safety, cost, latency
     thresholds = yaml.safe_load(Path(args.thresholds).read_text(encoding="utf-8"))
     failures = check_thresholds(summary, thresholds)        # list of breaches; empty = pass
-
-    baseline = None
-    if args.baseline:                                       # optional: compare with an earlier run
-        baseline = json.loads(Path(args.baseline).read_text(encoding="utf-8"))["summary"]
 
     meta = {                                                # recorded with every run for traceability
         "agent_model": agent_llm.model,
