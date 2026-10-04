@@ -1,0 +1,7 @@
+# Never copy secrets or local clutter into the image
+.env
+.venv/
+.git/
+results/
+__pycache__/
+*.egg-info/
