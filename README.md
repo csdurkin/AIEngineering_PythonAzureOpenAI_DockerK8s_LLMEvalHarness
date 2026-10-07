@@ -10,11 +10,17 @@ The agent answers writing questions from rules 1 to 18 of Strunk's *The Elements
 
 Live runs, 4 October 2026. Full reports in [`evidence/`](evidence/2026-10-04/).
 
+
 | Measure           | gpt-4.1-mini      | gpt-5-mini 
+
 | Accuracy          | 88.2%             | 88.2% 
+
 | Relevance         | 92.9%             | 92.9% 
+
 | Safety            | 100%              | 100% 
+
 | Median latency    | 0.84s             | 4.73s 
+
 | Cost per case     | $0.00055          | $0.00136 
 
 - The models tied on quality, but gpt-5-mini was 5.6 times slower and 2.5 times the cost. gpt-4.1-mini is the better choice for this task.
