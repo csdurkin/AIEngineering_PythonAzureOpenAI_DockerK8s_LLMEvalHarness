@@ -1,44 +1,51 @@
-#CLI.PY
-#Purpose: The command line entry point. Turns a typed command into a full evaluation run or a single test call.
-#Primary Components:
-#   A. Imports
-#   B. Helpers: _load_env (reads .env), _client (picks a mock or Azure client)
-#   C. Commands: cmd_ping (one live call), cmd_run (the full evaluation)
-#   D. main: defines the commands and options, then runs the one typed
-#Run flow (cmd_run): load models and cases > build agent and judge clients > run_eval > summarise >
-#   check thresholds > write results.json and report.md > exit 0 (pass) or 1 (fail, CI only)
-#Examples:
-#   llm-eval run --provider mock                                    (free, offline)
-#   llm-eval run --provider azure --agent agent-gpt-4.1-mini --judge judge-gpt-5-mini-2   (COST FLAG)
-#   llm-eval ping --deployment agent-gpt-4.1-mini                   (COST FLAG: one tiny call)
-#Used by: the llm-eval command, created by [project.scripts] in pyproject.toml
-#Relationship to providers.py: cli.py decides WHICH client to build; providers.py defines HOW each client talks to a model.
-#Authorship: drafted by Claude Opus 5.5 (Anthropic); reviewed and commented by Connor.
+"""
+CLI.PY (COMMAND LINE INTERFACE, not 'Client')
 
-"""Command line entry point."""
+PURPOSE: Turns typed command into a full evaluation run (cmd_run) or a single test call (cmd_ping).
+PRIMARY COMPONTENT: main (defines the commands and options); cmd_run; cmd_ping; _client (picks mock or Azure client); _load_env (reads .env)
+RUN FLOW (cmd_run): Load models and cases -> build agent and judge clients -> run_eval -> summarize -> check thresholds -> write results.json, report.md -> exit 0 (pass) or 1 (fail, CI only)
+
+EXAMPLE COMMANDS 
+- llm-eval run --provider mock:                                                                 used for free, offline test of system (no token usage)
+- llm-eval run --provider azure --agent agent-gpt-4.1-mini --judge judge-gpt-5-mini-2           provider set to azure (only azure and mock available); models: any deployed listed in models.yaml; judge: any deployment listed in models.yaml; names of models and judges must match exactly 
+- llm-eval ping --deployment agent-gpt-4.1-mini                                                 pings a model to check it responds. saying hello to one another
+
+WHAT USES CLI.PY
+- llm-eval command (which itself is defined in pyproject.toml)
+
+RELATIONSHIP TO PROVIDERS.PY
+- cli.py decides which client to build; providers.py defines how each client talks to a model
+- Client: object that does the talking. Sends request to Azure and hands back reply.
+- Azure OpenAI: Where models are deployed. Where we reach out with prompt and expect response from.
+"""
+
 
 # A. IMPORTS
+
+#Import: Python Settings
 from __future__ import annotations                      # allows modern type hints such as list[str] | None
 
+#Import: Standard Librarys
 import argparse                                         # reads commands and options typed in Terminal
 import json                                             # reads an earlier run's results.json (baseline)
 import sys                                              # sys.exit stops the program with a message
 from datetime import datetime, timezone                 # timestamps each run in UTC
 from pathlib import Path                                # file paths that work on any OS
 
-import yaml                                             # reads thresholds.yaml
+#Import: third party (installed with pip)
+import yaml                                             # YAML: stores settings and data in way both people and programs can read. Standard for such a project; other options: JSON, TOML, CSV, Python Dictonaries 
 
-from .agent import RagAgent, load_chunks                # the agent under test and its knowledge base
-from .cases import load_cases                           # the golden test set
-from .pricing import load_models                        # deployment registry from models.yaml
-from .providers import AzureOpenAIClient, MockClient, mock_agent_handler, mock_judge_handler
-from .report import write_outputs                       # writes results.json and report.md
-from .runner import check_thresholds, run_eval, summarise   # runs the cases, totals scores, compares to limits
+#Import: Interal, Cross File Imprts
+from .agent import RagAgent, load_chunks                                                                # RagAgent (agent under test); load_chunks (provides its knowledge base)
+from .cases import load_cases                                                                           # load_cases: provides golden test. Standard term for fixed list of test questions where good answers defined
+from .pricing import load_models                                                                        # reads config/models.yaml and turns it into a Python dictionary; one entry per deployment, settings and prices defined
+from .providers import AzureOpenAIClient, MockClient, mock_agent_handler, mock_judge_handler            # AzureOpenAIClient = real Azure model client; MockClient = free fake client; mock_*_handler = the scripts the fakes follow
+from .report import write_outputs                                                                       # writes results.json and report.md
+from .runner import check_thresholds, run_eval, summarise                                               # runs the cases, totals scores, compares to limits
 
 
 # B. HELPERS
 def _load_env() -> None:
-    """Load .env into the environment, if python-dotenv is installed."""
     try:
         from dotenv import load_dotenv                  # optional: only in the [azure] extra
     except ImportError:
@@ -47,7 +54,6 @@ def _load_env() -> None:
 
 
 def _client(provider: str, deployment: str, models: dict, mock_handler, mock_name: str):
-    """Return a mock client (free) or an Azure client (live) for one role: agent or judge."""
     if provider == "mock":
         return MockClient(mock_handler, model=mock_name)    # scripted answers, no network, no cost
     if deployment not in models:
@@ -58,7 +64,7 @@ def _client(provider: str, deployment: str, models: dict, mock_handler, mock_nam
 
 # C. COMMANDS
 def cmd_ping(args: argparse.Namespace) -> int:
-    """One tiny live call to prove the endpoint, key and deployment work."""
+  
     models = load_models(args.models)
     client = _client("azure", args.deployment, models, None, "")   # always live; no mock for ping
     r = client.complete("You are a test.", "Reply with the single word: pong", max_tokens=200)
@@ -70,7 +76,6 @@ def cmd_ping(args: argparse.Namespace) -> int:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    """Run every case through the agent, score it, compare to thresholds and write the report."""
     models = load_models(args.models)
     cases = load_cases(args.cases)
     if args.limit:
