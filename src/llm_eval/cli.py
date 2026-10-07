@@ -20,6 +20,7 @@ RELATIONSHIP TO PROVIDERS.PY
 """
 
 
+
 # A. IMPORTS
 
 #Import: Python Settings
@@ -44,46 +45,87 @@ from .report import write_outputs                                               
 from .runner import check_thresholds, run_eval, summarise                                               # runs the cases, totals scores, compares to limits
 
 
+
 # B. HELPERS
-def _load_env() -> None:
-    try:
-        from dotenv import load_dotenv                  # optional: only in the [azure] extra
-    except ImportError:
-        return                                          # mock runs and CI work without it
-    load_dotenv()                                       # endpoint and key now readable via os.environ
 
 
-def _client(provider: str, deployment: str, models: dict, mock_handler, mock_name: str):
+# HELPER: _load_env(): None - 
+# PURPOSE: Copies Azure endpoint and API key from local .evn file into environment, allowing them to be read without appearing in code
+# WEHERE WILL APPEAR: main(); _client() - builds clients for agent and judge (Azure or mock), former needs key; providers.py - AzureOpenAICilent reads endpoint/key; scripts/ping.py 
+def _load_env() -> None: 
+    try: 
+        from dotenv import load_dotenv                  # dotevnv: in python-dotenv package; not in repo. Declared in pyproject.toml
+    except ImportError: 
+        return                                          # mock runs and CI work without env
+    load_dotenv()                                       # endpoint and key now readable via os.environment
+    
+
+# HELPER:     _client()
+# ARGS:         provider (azure or mock); deployment (Azure model name); models (registry - models.yaml); MockHandler (fake reply); mock_name (label for mock client)
+# PURPOSE:      Build one model client, either Mock or Azure
+# RETURNS:      A client with a complete() method (by ysing AzureOpenAICLient or MockClient in imported from)
+# NOTES:        _client is never called from terminal. cmd_run calls it and provides arguments
+def _client(provider: str, deployment: str, models: dict, mock_handler, mock_name: str)
+    
     if provider == "mock":
-        return MockClient(mock_handler, model=mock_name)    # scripted answers, no network, no cost
+        return MockClient(mock_handler, model=mock_name)
+    
+    #ERROR: provided deployment not part of harness configuration
     if deployment not in models:
-        sys.exit(f"Deployment {deployment!r} is not in config/models.yaml")  # fail early on a typo
+        sys.exit(f"Deployment {deployment!r} is not in config/models.yaml.")            # !r - provides quoted text, good for error messages bc empty spaces ' '
+
+
+    # RETURN:   Build an Azure client for this deployment. Flag for easoning (True/False) comes from models.yaml, defaulting to False; notes if model thinks or not first before answering
+    # NOTES:    Older models (gpt-4.1-mini) take a temperature setting to control randomness. Reasoning models (gpt-5-mini) fix the temperature themselves and return an error if it is sent. Reasoning flag tells client to either provide temperature or not.
+    # NOTES:    Set reasoning to be the deployment's reasoning key under the models directory; False back up assumes standard model, standard describing how model behaives, not its age since release
     return AzureOpenAIClient(deployment, reasoning=models[deployment].get("reasoning", False))
-    # reasoning flag comes from models.yaml, so gpt-5 models are never sent temperature
+
 
 
 # C. COMMANDS
-def cmd_ping(args: argparse.Namespace) -> int:
-  
-    models = load_models(args.models)
-    client = _client("azure", args.deployment, models, None, "")   # always live; no mock for ping
-    r = client.complete("You are a test.", "Reply with the single word: pong", max_tokens=200)
-    print(
-        f"{args.deployment}: {r.text!r} | in={r.input_tokens} out={r.output_tokens} "
-        f"reasoning={r.reasoning_tokens} latency={r.latency_s:.2f}s"
-    )
-    return 0                                            # 0 = success to the shell
 
+
+def cmd_ping(args: argparse.Namespace) -> int: 
+    
+    # args.model: file path to models file, default config/models.yaml/, user not obligated to provide 
+    models = load_models(args.models)
+    
+    # ARGS: provider (azure); deployment (Azure model name); models; None (no fake reply, not mock); "" (no label for mock client), Ping always live, never mock
+    client = _client("azure", args.deployment, models, None, "")            
+
+    # NOTES: Completion is standard word for a model's generated reply. OpenAI's SDK uses chat.completions.create(...), and complete here is our wrapper around that SDK call
+    r = client.complete("You are a test.", "Reply with the single word: pong", max_tokens=200)
+    
+    print(
+        f"{args.deployment}: {r.text!r} | in={r.input_tokens} out={r.output_tokens} "   # Prints the model name, the reply text, then input and output token counts.
+        f"reasoning={r.reasoning_tokens} latency={r.latency_s:.2f}s"                    # Hidden reasoning tokens (0 for standard models); call time in seconds, 2 decimal places
+    
+    # RETURN: 0 
+    # NOTES: command-line program ends by handing a number back to the terminal. Return 0 when successful; failure returns a '1' automatically by python
+    return 0 
+                                           
 
 def cmd_run(args: argparse.Namespace) -> int:
+    
     models = load_models(args.models)
+    # args.cases: file path to cases file, default config/models.yaml/, user not obligated to provide 
     cases = load_cases(args.cases)
+    
+    # args.limit - User setting how many cases allowed to run; default run all cases pulled from file path
     if args.limit:
-        cases = cases[: args.limit]                     # --limit 3 runs only the first 3 (cheap test)
+        cases = cases[: args.limit]                         
 
+    # create clients for agent and judge. In run, only one provider allowed (no mock/Azure mix); defined in providers and imported: mock_agent_handler, mock_judge_handle, "mock-agent", "mock-judge")
+    # ARGS: provider (azure or mock); deployment (Azure model name); models (registry - models.yaml); MockHandler (fake reply); mock_name (label for mock client)
     agent_llm = _client(args.provider, args.agent, models, mock_agent_handler, "mock-agent")
     judge_llm = _client(args.provider, args.judge, models, mock_judge_handler, "mock-judge")
-    agent = RagAgent(agent_llm, load_chunks(args.docs))     # agent = model + Strunk rules
+    
+    # AGENT:                    system under test (RAG agent = Retrieval-Augmented Generation)
+    # WHAT CREATES AGENT:       pairing agent's model client with the knowledge base (chunks)
+    # DEFINITIONS:              retrieval - find relevant information in a store of documents; aumented - found rules added to prompt; generation - model writes answers from rules
+    # DIFF B/N AGENTS,CLIENTS:  Agent decides what to do, knows the rules and system prompt, does not know how Azure works. Client handles how to reach model, knows endpoint, key, deployment name, doesn't know what the rules
+    
+    agent = RagAgent(agent_llm, load_chunks(args.docs))     
 
     baseline = None
     if args.baseline:                                       # load first: a bad path fails before any paid calls
