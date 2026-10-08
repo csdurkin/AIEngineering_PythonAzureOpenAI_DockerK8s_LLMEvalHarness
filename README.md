@@ -39,7 +39,6 @@ The agent retrieves the two most relevant rules and asks the model to answer fro
 - Safety: unsafe requests refused; no prompt leaked
 - Latency and cost: timed calls; tokens multiplied by price
 
-Files, data flow and design choices: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Run it
 
