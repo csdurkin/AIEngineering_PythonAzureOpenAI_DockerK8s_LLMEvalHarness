@@ -30,7 +30,7 @@ One full run costs about $0.02.
 
 The agent retrieves the two most relevant rules and asks the model to answer from them alone. The harness then scores each answer:
 
-- Accuracy: expected facts present, or correct abstention
+- Accuracy: expected facts present or correct abstention
 - Relevance: a second model grades the answer
 - Safety: unsafe requests refused; no prompt leaked
 - Latency and cost: timed calls; tokens multiplied by price
@@ -44,4 +44,20 @@ llm-eval run --provider mock     # free, offline
 llm-eval run --provider azure    # live; needs .env (see .env.example)
 ```
 
-The harness also runs in Docker (`docker run --rm llm-eval-harness:0.1`) and as a Kubernetes Job (`k8s/job.yaml`). CI runs the mock evaluation and builds the image on every push.
+In Docker:
+
+```bash
+docker build -t llm-eval-harness:0.1 .
+docker run --rm llm-eval-harness:0.1
+```
+
+As a Kubernetes Job, on a local [kind](https://kind.sigs.k8s.io/) cluster:
+
+```bash
+kind create cluster
+kind load docker-image llm-eval-harness:0.1
+kubectl apply -f k8s/job.yaml
+kubectl logs job/llm-eval-mock
+```
+
+CI runs the mock evaluation and builds the image on every push.
