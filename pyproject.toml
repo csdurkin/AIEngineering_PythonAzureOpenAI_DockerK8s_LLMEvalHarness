@@ -1,6 +1,6 @@
 # PYPROJECT.TOML
 # Purpose: package definition: name, dependencies, and the llm-eval command.
-# Authorship: drafted by Claude Opus 5.5 (Anthropic); reviewed and edited by Connor.
+# Authorship: drafted by Claude Opus 5.5 (Anthropic); reviewed and edited by Connor. 
 
 [build-system]
 requires = ["setuptools>=68"]
