@@ -2,7 +2,8 @@
 
   #Purpose: Build the results viewer's data file (web/src/data/arena-data.json) from the 4 October 2026 evidence.
   #Primary Components:
-      #retrieve_scored (function): the harness retrieve(), but it keeps every chunk with its score, so the viewer can show what was sent and what lost out
+      #retrieve_scored (function): the harness retrieve(), but it keeps every chunk with its score and shared words, so the viewer can show what was sent and what lost out
+      #load_titles (function): each rule's title from its header line, for display
       #split_query (function): which question words were kept and which were dropped as stop words
       #load_results (function): reads both results.json files, keyed by display model name
       #check_integrity (function): proves retrieve_scored reproduces the 4 October run; stops on any drift
@@ -58,25 +59,28 @@ MODEL_FIELDS = [
 #  RETRIEVE SCORED
     #Purpose: Score every chunk against the question and return all of them, best first, with what retrieve() would have done to each
     #SOURCE: src/llm_eval/agent.py retrieve() (adapted: keeps every chunk and its score instead of only the top k)
-    #Output per chunk: rank, source, text, overlap (shared keywords), sent (passed to the model), tie (file order decided whether it was sent)
+    #Output per chunk: rank, source, title, text, matched (the shared keywords), overlap (how many), sent (passed to the model), tie (file order decided whether it was sent)
     #Why it matches retrieve(): retrieve() filters to overlap >= min_overlap, then takes the first k after a stable sort.
     #   Sorting all chunks the same way and marking the first k that pass the filter gives the same chunks. check_integrity() proves it.
-def retrieve_scored(question: str, chunks: list[Chunk], k: int = DEFAULT_K, min_overlap: int = DEFAULT_MIN_OVERLAP) -> list[dict]:
+def retrieve_scored(question: str, chunks: list[Chunk], titles: dict[str, str], k: int = DEFAULT_K, min_overlap: int = DEFAULT_MIN_OVERLAP) -> list[dict]:
     q_tokenised = tokenise(question)
 
-    scored = []                                                 #(score, chunk) pairs for every chunk, not just matches
+    scored = []                                                 #(shared words, chunk) pairs for every chunk, not just matches
     for chunk in chunks:
         chunk_tokenised = tokenise(chunk.text)
-        scored.append((len(q_tokenised & chunk_tokenised), chunk))
+        scored.append((q_tokenised & chunk_tokenised, chunk))   #Keep the shared words themselves; retrieve() keeps only their count
 
-    scored.sort(key=lambda pair: pair[0], reverse=True)         #Same stable sort as retrieve(): equal scores keep file order
+    scored.sort(key=lambda pair: len(pair[0]), reverse=True)    #Same stable sort as retrieve(): equal scores keep file order
 
     rows = []
-    for position, (score, chunk) in enumerate(scored):
+    for position, (matched, chunk) in enumerate(scored):
+        score = len(matched)
         rows.append({
             "rank": position + 1,
             "source": chunk.source,
+            "title": titles.get(chunk.source, ""),
             "text": chunk.text,
+            "matched": sorted(matched),
             "overlap": score,
             "sent": position < k and score >= min_overlap,      #In the top k AND a strong enough match
             "tie": False,                                       #Filled in below
@@ -93,6 +97,18 @@ def retrieve_scored(question: str, chunks: list[Chunk], k: int = DEFAULT_K, min_
         )
 
     return rows
+
+
+#  LOAD TITLES
+    #Purpose: Read each rule's title from its first header line, e.g. "# Rule 18: Place the emphatic words of a sentence at the end"
+    #Why separate: load_chunks() skips "#" lines, so the title never reaches a chunk. Display only; retrieval does not use it.
+def load_titles(docs_dir: Path) -> dict[str, str]:
+    titles = {}
+    for path in sorted(docs_dir.glob("*.md")):
+        first_line = path.read_text(encoding="utf-8").split("\n", 1)[0]
+        match = re.match(r"#\s*Rule\s+\d+:\s*(.+)", first_line)        #Text after "Rule N:"
+        titles[path.name] = match.group(1).strip() if match else ""
+    return titles
 
 
 #  SPLIT QUERY
@@ -179,9 +195,10 @@ def build(cases: list[Case], retrievals: dict, results: dict) -> dict:
 def main() -> None:
     cases = load_cases(CASES_FILE)
     chunks = load_chunks(DOCS_DIR)
+    titles = load_titles(DOCS_DIR)
     results = load_results()
 
-    retrievals = {case.id: retrieve_scored(case.question, chunks) for case in cases}
+    retrievals = {case.id: retrieve_scored(case.question, chunks, titles) for case in cases}
     check_integrity(cases, retrievals, results)
 
     data = build(cases, retrievals, results)
