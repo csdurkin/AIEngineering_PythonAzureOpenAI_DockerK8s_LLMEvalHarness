@@ -51,4 +51,10 @@ llm-eval run --provider azure    # live; needs .env (see .env.example)
 
 The harness also runs in Docker (`docker run --rm llm-eval-harness:0.1`) and as a Kubernetes Job (`k8s/job.yaml`). CI runs the mock evaluation and builds the image on every push.
 
-##
+## How this was built
+
+I built the results viewer (`web/`) and the question server (`api/`) with Claude Code (Anthropic) in Visual Studio Code. I wrote the brief and the working rules, chose the design direction, reviewed every step and tested the result; Claude drafted the code.
+
+The working rules: reuse my earlier hand-written code where it fits and mark it, make no changes to the harness (`src/llm_eval/`) without my approval, and claim only what is built.
+
+Each commit lists Claude as co-author. Each file states what Claude drafted, what was adapted from my MSc projects (a Ticketmaster React app, a Library GraphQL app and a Flask REST forum), and what is new. Files in the harness carry their own authorship notes.
