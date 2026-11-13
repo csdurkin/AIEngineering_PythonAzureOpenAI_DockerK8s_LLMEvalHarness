@@ -1,14 +1,23 @@
-// PURPOSE: App shell; applies the MUI theme and shows the top bar above the page content
-// SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/app/App.jsx (adapted: routes, Navigation and page imports removed; one page instead of routes; title changed)
+// PURPOSE: App shell; applies the MUI theme, shows the menu, and shows the chosen section below it
+// SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/app/App.jsx (adapted: routes and page imports removed; the AppBar moved into Navigation.jsx; a "view" state picks the section instead of the URL)
 // AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor
 
 // IMPORTS FOR REACT AND MUI
-import React from 'react';
-import { AppBar, Toolbar, Typography, ThemeProvider, CssBaseline } from '@mui/material';
+import React, { useState } from 'react';
+import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './muiStyling/theme.js';
 import './App.css';     //Applies the root layout once, for the whole application
 
+// IMPORT OF SECTIONS
+import Navigation from './components/Navigation.jsx';
+import RunPromptsPage from './components/RunPromptsPage.jsx';
+import PastResultsPage from './components/PastResultsPage.jsx';
+
 const App = () => {
+
+  //STATE MANAGEMENT
+    //view: which section is shown ('run' or 'past'); opens on past results, the only built section
+    const [view, setView] = useState('past');
 
   return (
 
@@ -18,30 +27,15 @@ const App = () => {
 
         <div className="App">
 
-        {/*
-          - AppBar: Top navigation container.
-          - Toolbar: Aligns and spaces items.
-          - Typography: Displays 'Agent Arena' as a heading.
-          - flexgrow - fills available space
-        */}
+          {/* MENU: Navigation receives the current view and a way to change it */}
+          <Navigation view={view} onChange={setView} />
 
-        <AppBar position="static">
-
-          <Toolbar>
-
-            <Typography variant="h1" sx={{ flexGrow: 1, textAlign: 'left' }}>
-              Agent Arena
-            </Typography>
-
-          </Toolbar>
-
-        </AppBar>
-
-          {/* PURPOSE: Page content area; ArenaPage goes here in step 3
-              SOURCE: new
-              AUTHORSHIP: drafted by Claude; reviewed by Connor */}
+          {/*NOTES:
+              - Replaces the Routes block: one page, no URL changes.
+              - Only the chosen section is drawn; the other is not rendered at all.
+          */}
           <main>
-
+            {view === 'run' ? <RunPromptsPage /> : <PastResultsPage />}
           </main>
 
         </div>

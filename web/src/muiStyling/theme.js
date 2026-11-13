@@ -1,5 +1,5 @@
 // PURPOSE: MUI theme; colours, fonts and component styles for the whole viewer
-// SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/muiStyling/theme.js (moved as is)
+// SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/muiStyling/theme.js (moved as is, except the navLink button variant added below, which is marked separately)
 // AUTHORSHIP: original by Connor (MSc); moved by Claude; reviewed by Connor
 
 // Theme configuration for the application
@@ -48,6 +48,31 @@ const theme = createTheme({
           padding: '10px 20px',
         },
       },
+
+      // PURPOSE: "navLink" button style for the top menu; the active section is highlighted
+      // SOURCE: https://github.com/csdurkin/WebProgramming_ReactGraphQL_LibraryApp/blob/main/react_client/src/muiStyling/theme.js (adapted: moved from styleOverrides into variants, which is where MUI 5 reads custom variants; recoloured to this palette; active colour now differs from the base)
+      // AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor
+      variants: [
+        {
+          props: { variant: 'navLink' },
+          style: {
+            textTransform: 'none',
+            borderRadius: 8,
+            padding: '15px',
+            backgroundColor: '#0062cc',
+            color: '#FFFFFF',
+            transition: 'background-color 0.3s ease, color 0.3s ease',
+            '&:hover': {
+              color: '#FFFFFF',
+              backgroundColor: '#3395ff',
+            },
+            '&.active': {
+              color: '#FFFFFF',
+              backgroundColor: '#EC8305',
+            },
+          },
+        },
+      ],
     },
 
     /* Card: Custom styles for card components */
