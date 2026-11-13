@@ -12,6 +12,7 @@ import './App.css';     //Applies the root layout once, for the whole applicatio
 import Navigation from './components/Navigation.jsx';
 import RunPromptsPage from './components/RunPromptsPage.jsx';
 import PastResultsPage from './components/PastResultsPage.jsx';
+import Footer from './components/Footer.jsx';
 
 const App = () => {
 
@@ -37,6 +38,9 @@ const App = () => {
           <main>
             {view === 'run' ? <RunPromptsPage /> : <PastResultsPage />}
           </main>
+
+          {/* FOOTER: shared by both sections */}
+          <Footer />
 
         </div>
 

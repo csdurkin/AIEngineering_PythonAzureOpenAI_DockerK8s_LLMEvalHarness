@@ -1,12 +1,12 @@
-/* PURPOSE: Root layout; centres the page and limits its width
-   SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/app/App.css (moved: #root block only; navigation and search-bar styles not needed)
-   AUTHORSHIP: original by Connor (MSc); moved by Claude; reviewed by Connor */
+/* PURPOSE: Root layout; lets the page bands run edge to edge
+   SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/app/App.css (adapted: #root block only, navigation and search-bar styles not needed; the 1280px width and padding moved into Band.jsx, so backgrounds can be full width while content stays centred)
+   AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor */
 
 /* Root container for the main layout */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* DEFINITIONS:
