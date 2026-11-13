@@ -3,3 +3,7 @@
 __pycache__/
 results/
 *.egg-info/
+
+# Results viewer (Node)
+web/node_modules/
+web/dist/

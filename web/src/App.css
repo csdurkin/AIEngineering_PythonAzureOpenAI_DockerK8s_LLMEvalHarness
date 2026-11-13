@@ -1,0 +1,16 @@
+/* PURPOSE: Root layout; centres the page and limits its width
+   SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/app/App.css (moved: #root block only; navigation and search-bar styles not needed)
+   AUTHORSHIP: original by Connor (MSc); moved by Claude; reviewed by Connor */
+
+/* Root container for the main layout */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* DEFINITIONS:
+- margin: Space outside an element, used for separation.
+- padding: Space inside an element, between the content and the border.
+- max-width: Limits the maximum width of an element.
+*/
