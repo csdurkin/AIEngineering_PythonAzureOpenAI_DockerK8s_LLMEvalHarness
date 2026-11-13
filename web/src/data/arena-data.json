@@ -272,7 +272,8 @@
           "latency_s": 1.4203479579882696,
           "input_tokens": 735,
           "output_tokens": 37,
-          "agent_cost_usd": 0.00035319999999999997
+          "agent_cost_usd": 0.00035319999999999997,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "Write \"Charles's friend.\" Form the possessive singular of nouns by adding 's (Rule 1).",
@@ -288,7 +289,8 @@
           "latency_s": 6.361409167002421,
           "input_tokens": 734,
           "output_tokens": 479,
-          "agent_cost_usd": 0.0011415
+          "agent_cost_usd": 0.0011415,
+          "status": "answered"
         }
       }
     },
@@ -550,7 +552,8 @@
           "latency_s": 1.6345793340005912,
           "input_tokens": 906,
           "output_tokens": 84,
-          "agent_cost_usd": 0.0004968
+          "agent_cost_usd": 0.0004968,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "Yes — include the comma: write \"red, white, and blue.\" (Rule 2)",
@@ -566,7 +569,8 @@
           "latency_s": 6.686592207988724,
           "input_tokens": 905,
           "output_tokens": 669,
-          "agent_cost_usd": 0.00156425
+          "agent_cost_usd": 0.00156425,
+          "status": "answered"
         }
       }
     },
@@ -826,7 +830,8 @@
           "latency_s": 1.1386049999855459,
           "input_tokens": 1039,
           "output_tokens": 91,
-          "agent_cost_usd": 0.0005612000000000001
+          "agent_cost_usd": 0.0005612000000000001,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "Enclose a parenthetic expression between commas (or, at the end of a sentence, between the comma and the period). If the parenthetic expression is preceded by a conjunction, place the first comma before the conjunction, not after it. If the interruption is very slight you may omit the commas, but never insert one comma and omit the other. Certain items—years in dates, the day of the month after a weekday, the abbreviations etc. and jr., and non‑restrictive relative clauses—are always set off by commas. (Rule 3)",
@@ -842,7 +847,8 @@
           "latency_s": 5.388538083003368,
           "input_tokens": 1038,
           "output_tokens": 763,
-          "agent_cost_usd": 0.0017855
+          "agent_cost_usd": 0.0017855,
+          "status": "answered"
         }
       }
     },
@@ -1091,7 +1097,8 @@
           "latency_s": 1.2253329579834826,
           "input_tokens": 1279,
           "output_tokens": 106,
-          "agent_cost_usd": 0.0006812000000000001
+          "agent_cost_usd": 0.0006812000000000001,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "No. Do not join independent clauses with just a comma. Use a semicolon (or make two sentences), or use a comma only when a coordinating conjunction is also present. If the second clause begins with an adverb such as accordingly, then, therefore, or thus and no conjunction is used, a semicolon is required. Exceptions: very short, balanced clauses (Man proposes, God disposes) and certain colloquial dialogue (I hardly knew him, he was so changed), though the latter is inappropriate in formal writing. (Rule 5)",
@@ -1107,7 +1114,8 @@
           "latency_s": 9.166892541048583,
           "input_tokens": 1278,
           "output_tokens": 824,
-          "agent_cost_usd": 0.0019675
+          "agent_cost_usd": 0.0019675,
+          "status": "answered"
         }
       }
     },
@@ -1363,7 +1371,8 @@
           "latency_s": 1.729896332952194,
           "input_tokens": 1178,
           "output_tokens": 131,
-          "agent_cost_usd": 0.0006808000000000001
+          "agent_cost_usd": 0.0006808000000000001,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "The opening participial phrase is dangling: it must refer to the grammatical subject, but here the subject is \"the clock,\" which cannot \"wonder.\" (Rule 7) A corrected version: \"Wondering irresolutely what to do next, he heard the clock strike twelve.\"",
@@ -1379,7 +1388,8 @@
           "latency_s": 7.565434499992989,
           "input_tokens": 1177,
           "output_tokens": 1090,
-          "agent_cost_usd": 0.00247425
+          "agent_cost_usd": 0.00247425,
+          "status": "answered"
         }
       }
     },
@@ -1620,7 +1630,8 @@
           "latency_s": 0.7182027919916436,
           "input_tokens": 748,
           "output_tokens": 35,
-          "agent_cost_usd": 0.0003552
+          "agent_cost_usd": 0.0003552,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "One topic — “one paragraph to each topic.” (Rule 8)",
@@ -1635,7 +1646,8 @@
           "latency_s": 3.3684418330085464,
           "input_tokens": 747,
           "output_tokens": 280,
-          "agent_cost_usd": 0.00074675
+          "agent_cost_usd": 0.00074675,
+          "status": "answered"
         }
       }
     },
@@ -1895,7 +1907,8 @@
           "latency_s": 1.123310707975179,
           "input_tokens": 2009,
           "output_tokens": 50,
-          "agent_cost_usd": 0.0008836
+          "agent_cost_usd": 0.0008836,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "Begin the paragraph with the topic sentence — place it at or near the beginning. (Rule 9)",
@@ -1911,7 +1924,8 @@
           "latency_s": 3.8657150830258615,
           "input_tokens": 2008,
           "output_tokens": 478,
-          "agent_cost_usd": 0.001458
+          "agent_cost_usd": 0.001458,
+          "status": "answered"
         }
       }
     },
@@ -2156,7 +2170,8 @@
           "latency_s": 0.7797714579501189,
           "input_tokens": 1503,
           "output_tokens": 15,
-          "agent_cost_usd": 0.0006252
+          "agent_cost_usd": 0.0006252,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "I shall always remember my first visit to Boston. (Rule 10)",
@@ -2172,7 +2187,8 @@
           "latency_s": 5.2328217920148745,
           "input_tokens": 1502,
           "output_tokens": 472,
-          "agent_cost_usd": 0.0013195
+          "agent_cost_usd": 0.0013195,
+          "status": "answered"
         }
       }
     },
@@ -2418,7 +2434,8 @@
           "latency_s": 1.3163077079807408,
           "input_tokens": 1624,
           "output_tokens": 67,
-          "agent_cost_usd": 0.0007568000000000001
+          "agent_cost_usd": 0.0007568000000000001,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "No. \"Very often\" is vague; Rule 12 advises using definite, specific, concrete language. Revise to something more specific—e.g., \"He was rarely on time,\" or better, \"He was on time only once a week.\" (Rule 12)",
@@ -2434,7 +2451,8 @@
           "latency_s": 5.015681541990489,
           "input_tokens": 1623,
           "output_tokens": 513,
-          "agent_cost_usd": 0.00143175
+          "agent_cost_usd": 0.00143175,
+          "status": "answered"
         }
       }
     },
@@ -2704,7 +2722,8 @@
           "latency_s": 0.5229322499944828,
           "input_tokens": 1030,
           "output_tokens": 31,
-          "agent_cost_usd": 0.0004616
+          "agent_cost_usd": 0.0004616,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "Rule 13: Omit needless words. (Rule 13)",
@@ -2720,7 +2739,8 @@
           "latency_s": 4.447100708028302,
           "input_tokens": 1029,
           "output_tokens": 471,
-          "agent_cost_usd": 0.00119925
+          "agent_cost_usd": 0.00119925,
+          "status": "answered"
         }
       }
     },
@@ -2962,7 +2982,8 @@
           "latency_s": 1.5526072090142407,
           "input_tokens": 1558,
           "output_tokens": 107,
-          "agent_cost_usd": 0.0007944000000000001
+          "agent_cost_usd": 0.0007944000000000001,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "It violates parallel construction by using the preposition \"in\" inconsistently; either use it only before the first term or repeat it before each term — e.g., \"In spring, summer, or winter\" or \"In spring, in summer, or in winter.\" (Rule 15)",
@@ -2978,7 +2999,8 @@
           "latency_s": 4.842113416991197,
           "input_tokens": 1557,
           "output_tokens": 580,
-          "agent_cost_usd": 0.00154925
+          "agent_cost_usd": 0.00154925,
+          "status": "answered"
         }
       }
     },
@@ -3236,7 +3258,8 @@
           "latency_s": 0.667853582999669,
           "input_tokens": 1885,
           "output_tokens": 21,
-          "agent_cost_usd": 0.0007876000000000001
+          "agent_cost_usd": 0.0007876000000000001,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "Use the present tense when summarizing the action of a drama, and keep to one tense throughout. (Rule 17)",
@@ -3252,7 +3275,8 @@
           "latency_s": 4.233963417005725,
           "input_tokens": 1884,
           "output_tokens": 482,
-          "agent_cost_usd": 0.001435
+          "agent_cost_usd": 0.001435,
+          "status": "answered"
         }
       }
     },
@@ -3515,7 +3539,8 @@
           "latency_s": 0.47040208301041275,
           "input_tokens": 1000,
           "output_tokens": 12,
-          "agent_cost_usd": 0.0004192
+          "agent_cost_usd": 0.0004192,
+          "status": "abstained"
         },
         "gpt-5-mini": {
           "answer": "The Elements of Style rules provided do not cover this question.",
@@ -3531,7 +3556,8 @@
           "latency_s": 3.852776959014591,
           "input_tokens": 999,
           "output_tokens": 469,
-          "agent_cost_usd": 0.00118775
+          "agent_cost_usd": 0.00118775,
+          "status": "abstained"
         }
       }
     },
@@ -3832,7 +3858,8 @@
           "latency_s": 0.8703200420131907,
           "input_tokens": 1502,
           "output_tokens": 64,
-          "agent_cost_usd": 0.0007032000000000001
+          "agent_cost_usd": 0.0007032000000000001,
+          "status": "answered"
         },
         "gpt-5-mini": {
           "answer": "A principle of composition — Rule 10.",
@@ -3848,7 +3875,8 @@
           "latency_s": 4.613415291009005,
           "input_tokens": 1501,
           "output_tokens": 466,
-          "agent_cost_usd": 0.00130725
+          "agent_cost_usd": 0.00130725,
+          "status": "answered"
         }
       }
     },
@@ -4096,7 +4124,8 @@
           "latency_s": 0.8166725830524229,
           "input_tokens": 2213,
           "output_tokens": 12,
-          "agent_cost_usd": 0.0009044000000000001
+          "agent_cost_usd": 0.0009044000000000001,
+          "status": "abstained"
         },
         "gpt-5-mini": {
           "answer": "The Elements of Style rules provided do not cover this question.",
@@ -4112,7 +4141,8 @@
           "latency_s": 6.856212624988984,
           "input_tokens": 2212,
           "output_tokens": 917,
-          "agent_cost_usd": 0.002387
+          "agent_cost_usd": 0.002387,
+          "status": "abstained"
         }
       }
     },
@@ -4342,7 +4372,8 @@
           "latency_s": 0.4536951670306735,
           "input_tokens": 752,
           "output_tokens": 12,
-          "agent_cost_usd": 0.00032
+          "agent_cost_usd": 0.00032,
+          "status": "abstained"
         },
         "gpt-5-mini": {
           "answer": "The Elements of Style rules provided do not cover this question.",
@@ -4357,7 +4388,8 @@
           "latency_s": 2.7470915419980884,
           "input_tokens": 751,
           "output_tokens": 277,
-          "agent_cost_usd": 0.00074175
+          "agent_cost_usd": 0.00074175,
+          "status": "abstained"
         }
       }
     },
@@ -4574,7 +4606,8 @@
           "latency_s": 0.7648625420406461,
           "input_tokens": 124,
           "output_tokens": 12,
-          "agent_cost_usd": 6.88e-05
+          "agent_cost_usd": 6.88e-05,
+          "status": "abstained"
         },
         "gpt-5-mini": {
           "answer": "The Elements of Style rules provided do not cover this question.",
@@ -4587,7 +4620,8 @@
           "latency_s": 2.059053875040263,
           "input_tokens": 123,
           "output_tokens": 149,
-          "agent_cost_usd": 0.00032875
+          "agent_cost_usd": 0.00032875,
+          "status": "abstained"
         }
       }
     },
@@ -4831,7 +4865,8 @@
           "latency_s": 0.710518250009045,
           "input_tokens": 0,
           "output_tokens": 0,
-          "agent_cost_usd": 0.0
+          "agent_cost_usd": 0.0,
+          "status": "blocked"
         },
         "gpt-5-mini": {
           "answer": "[Blocked by content filter]",
@@ -4844,7 +4879,8 @@
           "latency_s": 3.3746435409993865,
           "input_tokens": 0,
           "output_tokens": 0,
-          "agent_cost_usd": 0.0
+          "agent_cost_usd": 0.0,
+          "status": "blocked"
         }
       }
     },
@@ -5136,7 +5172,8 @@
           "latency_s": 0.7118004999938421,
           "input_tokens": 1208,
           "output_tokens": 12,
-          "agent_cost_usd": 0.0005024000000000001
+          "agent_cost_usd": 0.0005024000000000001,
+          "status": "abstained"
         },
         "gpt-5-mini": {
           "answer": "The Elements of Style rules provided do not cover this question.",
@@ -5152,7 +5189,8 @@
           "latency_s": 7.308893833018374,
           "input_tokens": 1207,
           "output_tokens": 789,
-          "agent_cost_usd": 0.00187975
+          "agent_cost_usd": 0.00187975,
+          "status": "abstained"
         }
       }
     },
@@ -5422,7 +5460,8 @@
           "latency_s": 0.9190725829685107,
           "input_tokens": 1501,
           "output_tokens": 12,
-          "agent_cost_usd": 0.0006196
+          "agent_cost_usd": 0.0006196,
+          "status": "abstained"
         },
         "gpt-5-mini": {
           "answer": "The Elements of Style rules provided do not cover this question.",
@@ -5438,7 +5477,8 @@
           "latency_s": 4.25303270801669,
           "input_tokens": 1500,
           "output_tokens": 469,
-          "agent_cost_usd": 0.001313
+          "agent_cost_usd": 0.001313,
+          "status": "abstained"
         }
       }
     }

@@ -8,8 +8,9 @@
       #load_results (function): reads both results.json files, keyed by display model name
       #check_integrity (function): proves retrieve_scored reproduces the 4 October run; stops on any drift
       #build (function): assembles one record per case, plus top-level meta
+      #build_retrieval_kit (function): the rules, titles, stop words and settings the browser needs to run retrieval itself
   #Run: .venv/bin/python scripts/build_viewer_data.py
-  #Output: web/src/data/arena-data.json (committed, so the web build needs no Python)
+  #Output: web/src/data/arena-data.json and web/src/data/retrieval-kit.json (committed, so the web build needs no Python)
   #Note: build step only. Reads evidence; never calls a model.
 
 #Authorship: drafted by Claude; reviewed by Connor.
@@ -29,6 +30,9 @@ from pathlib import Path
 from llm_eval.agent import DEFAULT_K, DEFAULT_MIN_OVERLAP, _STOPWORDS, Chunk, load_chunks, tokenise
 from llm_eval.cases import Case, load_cases
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   #repo root, so the api package can be imported
+from api.scoring import answer_status                              #shared with the question server
+
 #  CONSTANTS: PATHS
 ROOT = Path(__file__).resolve().parent.parent                   #Repo root, so the script works from any folder
 RUN_DATE = "2026-10-04"
@@ -36,6 +40,7 @@ EVIDENCE_DIR = ROOT / "evidence" / RUN_DATE
 CASES_FILE = ROOT / "data" / "cases.yaml"
 DOCS_DIR = ROOT / "data" / "docs"
 OUTPUT_FILE = ROOT / "web" / "src" / "data" / "arena-data.json"
+KIT_FILE = ROOT / "web" / "src" / "data" / "retrieval-kit.json"     #For the Run prompts page: lets the browser run retrieval on any question
 
 #  CONSTANT: MODELS
     #Purpose: evidence folder name -> the agent_model recorded in its results.json; the folder name is the display name
@@ -121,6 +126,9 @@ def split_query(question: str) -> dict:
     return {"kept": sorted(kept), "dropped": sorted(dropped)}
 
 
+#  ANSWER STATUS: imported from api/scoring.py (shared with the question server)
+
+
 #  LOAD RESULTS
     #Purpose: Read each model's results.json, check it is the model we expect, and index its cases by id
     #Output: {display name: {"meta": ..., "cases": {case id: case}}}
@@ -172,7 +180,10 @@ def build(cases: list[Case], retrievals: dict, results: dict) -> dict:
             "query": split_query(case.question),
             "retrieval": retrievals[case.id],
             "models": {
-                name: {field: result["cases"][case.id][field] for field in MODEL_FIELDS}
+                name: {
+                    **{field: result["cases"][case.id][field] for field in MODEL_FIELDS},
+                    "status": answer_status(result["cases"][case.id]["answer"]),
+                }
                 for name, result in results.items()
                 if case.id in result["cases"]
             },
@@ -187,6 +198,20 @@ def build(cases: list[Case], retrievals: dict, results: dict) -> dict:
         "retrieval": {"k": DEFAULT_K, "min_overlap": DEFAULT_MIN_OVERLAP, "chunk_count": len(next(iter(retrievals.values())))},
     }
     return {"meta": meta, "cases": records}
+
+
+
+#  BUILD RETRIEVAL KIT
+    #Purpose: Everything web/src/lib/retrieval.js needs to repeat retrieve_scored() in the browser for a question someone types
+    #Note: the token pattern is the one tokenise() uses; the JavaScript port uses the same pattern, and a parity check compares them on all golden questions
+def build_retrieval_kit(chunks: list[Chunk], titles: dict[str, str]) -> dict:
+    return {
+        "k": DEFAULT_K,
+        "min_overlap": DEFAULT_MIN_OVERLAP,
+        "token_pattern": "[a-z0-9£]+",
+        "stopwords": sorted(_STOPWORDS),
+        "chunks": [{"source": c.source, "title": titles.get(c.source, ""), "text": c.text} for c in chunks],
+    }
 
 
 
@@ -205,8 +230,11 @@ def main() -> None:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
+    KIT_FILE.write_text(json.dumps(build_retrieval_kit(chunks, titles), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
     print(f"{len(cases)} cases, {len(results)} models, integrity OK")
     print(f"Wrote {OUTPUT_FILE.relative_to(ROOT)}")
+    print(f"Wrote {KIT_FILE.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
