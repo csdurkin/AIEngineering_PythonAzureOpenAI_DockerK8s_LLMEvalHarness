@@ -6,13 +6,11 @@
 
 import { Box, Typography } from '@mui/material';
 import { HEADING_FONT } from '../muiStyling/theme.js';
-
-//CONSTANT: the sunset, one stop per band, so the bands blend into one gradient from daylight (input) to dusk (output)
-export const SUNSET = ['#FFFBF5', '#FFF4E6', '#FFEBD4', '#FFDDB8', '#FED7AA'];
+import { C, SUNSET } from '../lib/design.js';
 
 //CONSTANTS: spine colours
-const LINE = 'rgba(194, 65, 12, 0.30)';
-const NODE = '#C2410C';
+const LINE = 'rgba(194, 65, 12, 0.30)';                      // burnt orange, faded
+const NODE = C.orange;
 
 //CONSTANT: the light panel; translucent white with a blur, so the band colour still shows through
 const PANEL = {
@@ -54,11 +52,11 @@ function Band({ id, step, from = SUNSET[0], to = from, background, first = false
             <Box
               sx={{
                 position: 'absolute', top: NODE_TOP, left: '50%', transform: 'translateX(-50%)',
-                width: 32, height: 32, borderRadius: '50%', backgroundColor: '#FFFFFF', border: `2px solid ${NODE}`,
+                width: 32, height: 32, borderRadius: '50%', backgroundColor: C.white, border: `2px solid ${NODE}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <Typography sx={{ fontFamily: HEADING_FONT, fontSize: '0.75rem', fontWeight: 800, color: '#9A3412', lineHeight: 1 }}>{step}</Typography>
+              <Typography sx={{ fontFamily: HEADING_FONT, fontSize: '0.75rem', fontWeight: 800, color: C.rust, lineHeight: 1 }}>{step}</Typography>
             </Box>
           </Box>
         )}

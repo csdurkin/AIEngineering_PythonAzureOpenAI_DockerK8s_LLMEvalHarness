@@ -7,12 +7,12 @@
 import { Box, Typography, Button } from '@mui/material';
 import { visuallyHidden } from '@mui/utils';
 import { Eyebrow } from './Section.jsx';
+import { C } from '../lib/design.js';
 
-//CONSTANTS: hero colours (light text on dark rust; all well above 4.5:1)
-export const HERO_BG = 'linear-gradient(135deg, #431407 0%, #7C2D12 100%)';
-const TEXT = '#FFF7ED';
+//CONSTANTS: hero colours (light text on the dark rust HERO_BG in lib/design.js; all well above 4.5:1)
+const TEXT = C.paleOrange;
 const MUTED = 'rgba(255, 237, 213, 0.82)';                 // 6.0:1 on the lighter end of the hero
-const ACCENT = '#FDBA74';
+const ACCENT = C.apricot;
 
 // Props: eyebrow, title, body (main paragraph), note (optional smaller line), cta ({ label, href }),
 //        steps (list of step names, matching the spine), links ({ label, href } list, open in a new tab), linksTitle
@@ -23,7 +23,7 @@ function Hero({ eyebrow, title, body, note, cta, steps, links, linksTitle = 'On 
       {/* LEFT: what this page is */}
       <Box>
         <Eyebrow color={ACCENT}>{eyebrow}</Eyebrow>
-        <Typography variant="h2" sx={{ color: TEXT, fontSize: { xs: '2rem', sm: '2.5rem' }, marginBottom: 2.5, maxWidth: '20ch' }}>
+        <Typography variant="h2" sx={{ color: TEXT, fontSize: { xs: '1.75rem', sm: '2.5rem' }, marginBottom: 2.5 }}>
           {title}
         </Typography>
         <Typography variant="body1" sx={{ color: TEXT, maxWidth: '62ch', marginBottom: note ? 1.5 : 3 }}>{body}</Typography>
@@ -32,7 +32,7 @@ function Hero({ eyebrow, title, body, note, cta, steps, links, linksTitle = 'On 
         {/* CALL TO ACTION: jumps to step 01; blue, the accent for anything you can click */}
         {cta && (
           <Button href={cta.href} variant="contained" disableElevation
-            sx={{ borderRadius: 999, paddingX: 3, paddingY: 1.25, fontSize: '1rem', backgroundColor: '#2563EB', '&:hover': { backgroundColor: '#1D4ED8' } }}>
+            sx={{ borderRadius: 999, paddingX: 3, paddingY: 1.25, fontSize: '1rem', backgroundColor: C.accent, '&:hover': { backgroundColor: C.accentDark } }}>
             {cta.label} <Box component="span" aria-hidden="true" sx={{ marginLeft: 1 }}>↓</Box>
           </Button>
         )}

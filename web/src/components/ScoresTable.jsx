@@ -4,7 +4,7 @@
 
 import { Box, Chip, Table, TableHead, TableBody, TableRow, TableCell, TableContainer, Typography } from '@mui/material';
 import { fmt } from '../lib/format.js';
-import { SURFACE } from './Section.jsx';
+import { C, SURFACE } from '../lib/design.js';
 
 //CONSTANT: the rows; `show` turns one model's record into display text
 const ROWS = [
@@ -42,7 +42,7 @@ function ScoresTable({ caseData, modelNames, colours }) {
             const values = modelNames.map((name) => (caseData.models[name] ? show(caseData.models[name]) : 'no result'));
             const differs = new Set(values).size > 1;
             return (
-              <TableRow key={label} sx={{ backgroundColor: differs ? '#FFF7ED' : undefined }}>
+              <TableRow key={label} sx={{ backgroundColor: differs ? C.accentTint : undefined }}>   {/* differing rows: light blue (blue = needs attention) */}
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{label}</Typography>

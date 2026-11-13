@@ -7,11 +7,12 @@ import {
   Typography, Box, Chip,
   Table, TableHead, TableBody, TableRow, TableCell, TableContainer,
 } from '@mui/material';
-import Section, { SubSection, SURFACE } from './Section.jsx';
+import Section, { SubSection } from './Section.jsx';
+import { C, SURFACE } from '../lib/design.js';
 
 //CONSTANTS: colours for the cut-off line and tie marking
-const ACCENT = '#2563EB';               // blue accent: the "sent" boundary
-const TIE = '#B45309';                  // amber-brown edge on tied rows; tie also has a text label, never colour alone
+const ACCENT = C.accent;                // blue accent: the "sent" boundary
+const TIE = C.amber;                  // amber-brown edge on tied rows; tie also has a text label, never colour alone
 
 // Props: caseData (one case from arena-data.json), retrievalMeta (k and min_overlap from meta)
 function SharedPanel({ caseData, retrievalMeta }) {
@@ -33,7 +34,7 @@ function SharedPanel({ caseData, retrievalMeta }) {
       <TableCell colSpan={4} sx={{ padding: 0, borderBottom: 'none' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, paddingY: 0.75 }}>
           <Box sx={{ flex: 1, borderTop: `2px dashed ${ACCENT}` }} />
-          <Typography variant="body2" sx={{ color: '#1D4ED8', fontWeight: 600, textAlign: 'center' }}>
+          <Typography variant="body2" sx={{ color: C.accentDark, fontWeight: 600, textAlign: 'center' }}>
             {sentRows.length
               ? `Above: sent to the model (top ${retrievalMeta.k}, ${retrievalMeta.min_overlap}+ shared words) · Below: not sent`
               : `Nothing sent: no rule shared ${retrievalMeta.min_overlap}+ words`}
@@ -60,7 +61,7 @@ function SharedPanel({ caseData, retrievalMeta }) {
             <Typography variant="h5" sx={{ marginBottom: 1.25 }}>Words dropped (stop words)</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {query.dropped.length
-                ? query.dropped.map((w) => <Chip key={w} label={w} variant="outlined" size="small" sx={{ textDecoration: 'line-through' }} />)
+                ? query.dropped.map((w) => <Chip key={w} label={w} variant="outlined" size="small" />)
                 : <Typography variant="body2">none</Typography>}
             </Box>
           </Box>
@@ -70,7 +71,12 @@ function SharedPanel({ caseData, retrievalMeta }) {
       {/* RULES MATCHED AND SENT: HIT or MISS, then the table with the cut-off line */}
       <SubSection
         title="Rules matched and sent"
-        action={expected ? <Chip label={hit ? 'HIT' : 'MISS'} color={hit ? 'success' : 'error'} size="small" /> : null}
+        action={expected ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>Retrieval result:</Typography>
+            <Chip label={hit ? 'HIT' : 'MISS'} color={hit ? 'success' : 'error'} size="small" />
+          </Box>
+        ) : null}
       >
         <Typography variant="body1">
           {expected ? (
@@ -104,7 +110,7 @@ function SharedPanel({ caseData, retrievalMeta }) {
                 <Fragment key={row.source}>
                   <TableRow
                     sx={{
-                      backgroundColor: row.source === expected ? '#FFF7ED' : undefined,               // expected rule: peach
+                      backgroundColor: row.source === expected ? C.accentTint : undefined,               // expected rule: light blue (blue = needs attention)
                       boxShadow: row.tie ? `inset 4px 0 0 ${TIE}` : undefined,                        // tied rows: amber edge
                       '& td': { color: row.sent ? 'text.primary' : 'text.secondary' },
                     }}
@@ -124,8 +130,8 @@ function SharedPanel({ caseData, retrievalMeta }) {
                       {/* OVERLAP: number plus a thin bar, scaled to the number of question words */}
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Box component="span" sx={{ width: 16, textAlign: 'right' }}>{row.overlap}</Box>
-                        <Box sx={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: '#F5F5F4' }}>
-                          <Box sx={{ width: `${(row.overlap / maxOverlap) * 100}%`, height: '100%', borderRadius: 3, backgroundColor: row.sent ? ACCENT : '#A8A29E' }} />
+                        <Box sx={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: C.stoneLight }}>
+                          <Box sx={{ width: `${(row.overlap / maxOverlap) * 100}%`, height: '100%', borderRadius: 3, backgroundColor: row.sent ? ACCENT : C.stone }} />
                         </Box>
                       </Box>
                     </TableCell>

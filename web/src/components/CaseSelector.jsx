@@ -4,6 +4,7 @@
 
 import { Box, Select, MenuItem, Typography } from '@mui/material';
 import { SERIF_FONT, SERIF_SIZE } from '../muiStyling/theme.js';
+import { C } from '../lib/design.js';
 
 // Props: cases (list of {id, question}), value (chosen case id), onChange (called with the new case id)
 function CaseSelector({ cases, value, onChange }) {
@@ -14,7 +15,6 @@ function CaseSelector({ cases, value, onChange }) {
 
       {/**VALUE: the chosen case id
        * On Change: pass the menu item's value (a case id) up to the page, which holds the state
-       * displayEmpty shows a placeholder option when no value is selected
        * fullWidth makes the component span the full width of its container.
        * variant="standard" + disableUnderline: no box or line, so the chosen question reads as a headline
        * renderValue: the closed control shows only the question, large, in serif
@@ -27,7 +27,6 @@ function CaseSelector({ cases, value, onChange }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         renderValue={(id) => cases.find((x) => x.id === id)?.question ?? ''}
-        displayEmpty
         fullWidth
         inputProps={{ 'aria-label': 'Test question' }}
         MenuProps={{ PaperProps: { sx: { maxHeight: 480, padding: 0 } } }}
@@ -38,10 +37,10 @@ function CaseSelector({ cases, value, onChange }) {
           lineHeight: 1.4,
           borderRadius: 2,
           transition: 'background-color 0.2s ease',
-          '&:hover': { backgroundColor: '#EFF6FF' },                                 // pale blue: blue is the "you can click this" accent
-          '&.Mui-focused': { backgroundColor: '#EFF6FF', outline: '2px solid #2563EB', outlineOffset: 2 },
+          '&:hover': { backgroundColor: C.accentTint },                                 // pale blue: blue is the "you can click this" accent
+          '&.Mui-focused': { backgroundColor: C.accentTint, outline: `2px solid ${C.accent}`, outlineOffset: 2 },
           '& .MuiSelect-select': { whiteSpace: 'normal', paddingY: 1, paddingLeft: 1, paddingRight: '2.5rem !important' },
-          '& .MuiSelect-icon': { color: '#2563EB', fontSize: '2rem', right: 4 },
+          '& .MuiSelect-icon': { color: C.accent, fontSize: '2rem', right: 4 },
         }}
       >
 

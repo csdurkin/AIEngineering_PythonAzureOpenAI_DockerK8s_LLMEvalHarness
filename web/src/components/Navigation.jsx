@@ -3,6 +3,7 @@
 // AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor
 
 import { AppBar, Toolbar, Button, Box, Typography } from '@mui/material';
+import { C } from '../lib/design.js';
 
 //SECTIONS: one entry per menu button; "key" is what App stores as the current section; "tag" is an optional small note
 const SECTIONS = [
@@ -30,8 +31,8 @@ function Navigation({ view, onChange }) {
 
                     {/* WORDMARK: a small sunset disc and the name */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-                            <Box aria-hidden="true" sx={{ width: 20, height: 20, borderRadius: '50%', background: 'linear-gradient(180deg, #FDBA74 0%, #C2410C 100%)' }} />
-                            <Typography variant="h1" sx={{ fontSize: '1.125rem', color: '#7C2D12' }}>
+                            <Box aria-hidden="true" sx={{ width: 20, height: 20, borderRadius: '50%', background: `linear-gradient(180deg, ${C.apricot} 0%, ${C.orange} 100%)` }} />
+                            <Typography variant="h1" sx={{ fontSize: '1.125rem', color: C.rustDark }}>
                                 Agent Arena
                             </Typography>
                         </Box>
@@ -48,7 +49,7 @@ function Navigation({ view, onChange }) {
                                 >
                                     {label}
                                     {tag && (
-                                        <Box component="span" sx={{ marginLeft: 0.75, fontSize: '0.6875rem', fontWeight: 600, paddingX: 0.75, borderRadius: 999, backgroundColor: 'rgba(124, 45, 18, 0.10)', color: '#7C2D12' }}>
+                                        <Box component="span" sx={{ marginLeft: 0.75, fontSize: '0.6875rem', fontWeight: 600, paddingX: 0.75, borderRadius: 999, backgroundColor: 'rgba(124, 45, 18, 0.10)', color: C.rustDark }}>
                                             {tag}
                                         </Box>
                                     )}

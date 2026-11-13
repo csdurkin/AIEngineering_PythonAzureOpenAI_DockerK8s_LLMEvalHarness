@@ -1,5 +1,5 @@
 // PURPOSE: MUI theme; colours, fonts and component styles for the whole viewer
-// SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/muiStyling/theme.js (adapted: structure, sections and comments kept; palette changed to sunset oranges with blue as the accent; typography changed to Inter with Plus Jakarta Sans headings and Fraunces serif for tested language, a 1.25x scale with three distinct heading tiers, per-variant line heights, left-aligned headings; cards use a shadow instead of a border; the sunset now runs through full-width page bands (Band.jsx); frosted sticky menu bar, pill chips and quiet table styles added; the navLink button variant is marked separately below)
+// SOURCE: https://github.com/csdurkin/WebProgramming_ReactVite_TicketmasterAPI/blob/main/src/components/muiStyling/theme.js (adapted: structure, sections and comments kept; palette changed to sunset oranges with blue as the accent; typography changed to Inter with Plus Jakarta Sans headings and Fraunces serif for tested language, a 1.25x scale with three distinct heading tiers, per-variant line heights, left-aligned headings; the sunset now runs through full-width page bands (Band.jsx); frosted sticky menu bar, pill chips and quiet table styles added; Card, CardMedia and Link styles removed, as the viewer does not use those components; the navLink button variant is marked separately below)
 // AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor
 
 // Theme configuration for the application
@@ -118,31 +118,6 @@ const theme = createTheme({
       ],
     },
 
-    /* Card: Custom styles for card components */
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          maxWidth: '100%',
-          margin: '16px 0',
-          padding: '16px',
-          borderRadius: 12,
-          boxShadow: '0 4px 14px rgba(124, 45, 18, 0.12)',   // soft warm shadow instead of the 2px orange border
-        },
-      },
-    },
-
-    /* CardMedia: Styling for media within cards */
-    MuiCardMedia: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          height: 'auto',
-          objectFit: 'cover',
-          border: '2px solid #C2410C',
-        },
-      },
-    },
-
     /* Chip: pill-shaped tags with medium-weight text */
     MuiChip: {
       styleOverrides: {
@@ -189,18 +164,6 @@ const theme = createTheme({
       },
     },
 
-    /* Link: Styling for link elements */
-    MuiLink: {
-      styleOverrides: {
-        root: {
-          textDecoration: 'none',
-          color: '#2563EB',
-          '&:hover': {
-            textDecoration: 'underline',
-          },
-        },
-      },
-    },
   },
 });
 
@@ -215,7 +178,6 @@ export default theme;
 - border: Defines the style, width, and color of borders.
 - borderRadius: Rounds the corners of an element.
 - textTransform: Controls capitalization of text.
-- objectFit: Specifies how media should fit its container.
 - textDecoration: Sets or removes text decoration like underlines.
 - linear-gradient: Blends smoothly between colours along a line (here, top to bottom).
 - boxShadow: Draws a soft shadow around an element, so it appears to sit above the page.

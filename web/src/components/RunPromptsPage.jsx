@@ -10,20 +10,21 @@
 //IMPORTS
 import { useMemo, useRef, useState } from 'react';
 import { Box, Typography, Grid, Fade, Chip, Button, InputBase, LinearProgress, Alert } from '@mui/material';
-import Band, { SUNSET } from './Band.jsx';
-import Hero, { HERO_BG } from './Hero.jsx';
+import Band from './Band.jsx';
+import Hero from './Hero.jsx';
 import LanguageCard from './LanguageCard.jsx';
 import SharedPanel from './SharedPanel.jsx';
 import ModelPanel from './ModelPanel.jsx';
-import ComparisonTiles, { MODEL_COLOURS } from './ComparisonTiles.jsx';
+import ComparisonTiles from './ComparisonTiles.jsx';
 import ScoresTable from './ScoresTable.jsx';
-import { outcome, separation } from './ConclusionPanel.jsx';
+import { outcome, separation, retrievalSummary, retrievalCheck } from '../lib/summary.js';
 import Section, { SubSection, Eyebrow } from './Section.jsx';
 import { asCase, RETRIEVAL_SETTINGS } from '../lib/retrieval.js';
 import { askModels } from '../lib/api.js';
 import { REPO_URL } from '../lib/links.js';
 import { SERIF_FONT } from '../muiStyling/theme.js';
 import arenaData from '../data/arena-data.json';
+import { C, SUNSET, MODEL_COLOURS, HERO_BG } from '../lib/design.js';
 
 //CONSTANTS
 const MODELS = arenaData.meta.models;                                    // the same two models as the past run
@@ -33,33 +34,6 @@ const EXAMPLES = [                                                       // not 
   'Is "not very often" a good phrase to use?',
   'How do I keep related words together in a sentence?',
 ];
-
-//HELPER: a list in plain English: ["a"] -> "a"; ["a", "b"] -> "a and b"; ["a", "b", "c"] -> "a, b and c"
-const listText = (items) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`);
-
-//  RETRIEVAL SUMMARY: what retrieval handed to the models, built by fixed rules (no model writes it)
-function retrievalSummary(caseData) {
-  const { k, min_overlap: min } = RETRIEVAL_SETTINGS;
-  const sent = caseData.retrieval.filter((r) => r.sent);
-  const parts = [];
-
-  if (!sent.length) {
-    parts.push(`No rule shares ${min} or more words with your question, so the models received no rules as context.`);
-  } else {
-    parts.push(`${sent.length === 1 ? '1 rule was' : `${sent.length} rules were`} sent to both models: ${listText(sent.map((r) => `${r.source} (${r.title})`))}.`);
-    const tied = caseData.retrieval.filter((r) => r.tie);
-    if (tied.length) parts.push(`The last of the top ${k} places was a tie between ${listText(tied.map((r) => r.source))}; file order decided.`);
-  }
-  if (caseData.query.dropped.length) parts.push(`Dropped as stop words: ${listText(caseData.query.dropped)}.`);
-  return parts.join(' ');
-}
-
-//  RETRIEVAL CHECK: the server's agent should send the same rules as the browser's retrieval; say so if it did not
-function retrievalCheck(caseData) {
-  const browser = caseData.retrieval.filter((r) => r.sent).map((r) => r.source).join(',');
-  const differ = Object.entries(caseData.models).filter(([, r]) => r.sources.join(',') !== browser).map(([name]) => name);
-  return differ.length ? `Note: the server's retrieval for ${listText(differ)} differed from this page's, so the rules data may be out of date.` : '';
-}
 
 function RunPromptsPage() {
 
@@ -98,7 +72,7 @@ function RunPromptsPage() {
 
     //SUMMARY SENTENCE: retrieval always; the models' outcome and separation once they have answered
     const summary = caseData && [
-      retrievalSummary(caseData),
+      retrievalSummary(caseData, RETRIEVAL_SETTINGS),
       phase === 'done' && outcome(MODELS[0], caseData.models[MODELS[0]], MODELS[1], caseData.models[MODELS[1]]),
       phase === 'done' && separation(MODELS[0], caseData.models[MODELS[0]], MODELS[1], caseData.models[MODELS[1]]),
       phase === 'done' && retrievalCheck(caseData),
@@ -129,10 +103,12 @@ function RunPromptsPage() {
 
       {/* 01 START HERE: the text area; same card style as the answers in band 04 */}
       <Band id="ask" step="01" first last={!caseData} from={SUNSET[0]} to={SUNSET[1]} label="Write a question">
-        <Eyebrow color="#1D4ED8">Start here</Eyebrow>
+        <Eyebrow color={C.accentDark}>Start here</Eyebrow>
         <Typography variant="h3" sx={{ marginBottom: 1 }}>Write a question</Typography>
         <Typography variant="body1" color="text.secondary" sx={{ marginBottom: 3, maxWidth: '72ch' }}>
-          Ask about writing style, as a student might. Press Ask both models, or Ctrl+Enter (Cmd+Enter on a Mac).
+          Ask about writing style, as a student might.
+          <br />
+          Press Ask both models, or Ctrl+Enter (Cmd+Enter on a Mac).
         </Typography>
 
         <LanguageCard
@@ -154,18 +130,22 @@ function RunPromptsPage() {
             sx={{
               fontFamily: SERIF_FONT, fontSize: { xs: '1.25rem', sm: '1.375rem' }, fontWeight: 500, lineHeight: 1.4,
               borderRadius: 2, padding: 1, transition: 'background-color 0.2s ease',
-              '&:hover': { backgroundColor: '#EFF6FF' },
-              '&.Mui-focused': { backgroundColor: '#EFF6FF', outline: '2px solid #2563EB', outlineOffset: 2 },
+              '&:hover': { backgroundColor: C.accentTint },
+              '&.Mui-focused': { backgroundColor: C.accentTint, outline: `2px solid ${C.accent}`, outlineOffset: 2 },
             }}
           />
 
-          {/* ASK + EXAMPLES */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, marginTop: 2, paddingLeft: 1 }}>
+          {/* ASK */}
+          <Box sx={{ marginTop: 2, paddingLeft: 1 }}>
             <Button variant="contained" disableElevation onClick={() => run()} disabled={!draft.trim() || phase === 'loading'}
-              sx={{ borderRadius: 999, paddingX: 3, backgroundColor: '#2563EB', '&:hover': { backgroundColor: '#1D4ED8' } }}>
+              sx={{ borderRadius: 999, paddingX: 3, backgroundColor: C.accent, '&:hover': { backgroundColor: C.accentDark } }}>
               {phase === 'loading' ? 'Asking…' : 'Ask both models'}
             </Button>
-            <Typography variant="body2" color="text.secondary" sx={{ marginLeft: 1 }}>or try:</Typography>
+          </Box>
+
+          {/* EXAMPLES: on their own line under the button */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, marginTop: 2, paddingLeft: 1 }}>
+            <Typography variant="body2" color="text.secondary">Or try…</Typography>
             {EXAMPLES.map((q) => (
               <Chip key={q} label={q} size="small" variant="outlined" clickable disabled={phase === 'loading'} onClick={() => run(q)} sx={{ fontFamily: SERIF_FONT }} />
             ))}
@@ -182,7 +162,7 @@ function RunPromptsPage() {
             <Band step="02" from={SUNSET[1]} to={SUNSET[2]} label="Summary">
               <Eyebrow>At a glance</Eyebrow>
               <Typography variant="h3" sx={{ marginBottom: 2 }}>Summary</Typography>
-              <Typography variant="body1" aria-live="polite" sx={{ fontWeight: 500, maxWidth: '72ch', borderLeft: '3px solid #C2410C', paddingLeft: 2 }}>
+              <Typography variant="body1" aria-live="polite" sx={{ fontWeight: 500, maxWidth: '72ch', borderLeft: `3px solid ${C.orange}`, paddingLeft: 2 }}>
                 {summary}
                 {phase === 'loading' && ' Waiting for both models…'}
               </Typography>
@@ -236,10 +216,7 @@ function RunPromptsPage() {
                     <SubSection title="Speed, length and cost">
                       <ComparisonTiles caseData={caseData} modelNames={MODELS} />
                     </SubSection>
-                    <SubSection
-                      title="Answers"
-                      action={<Chip label="Output" size="small" variant="outlined" sx={{ borderColor: '#9A3412', color: '#9A3412', fontWeight: 700, letterSpacing: '0.06em' }} />}
-                    >
+                    <SubSection title="Answers">
                       <Grid container spacing={2}>
                         {MODELS.map((name, i) => (
                           <Grid item xs={12} md={6} key={name}>

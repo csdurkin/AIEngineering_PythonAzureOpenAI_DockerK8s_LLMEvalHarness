@@ -5,19 +5,19 @@
 
 //IMPORTS
 import { useState } from 'react';
-import { Box, Typography, Grid, Fade, Chip } from '@mui/material';
-import Band, { SUNSET } from './Band.jsx';
+import { Box, Typography, Grid, Fade } from '@mui/material';
+import Band from './Band.jsx';
 import CaseSelector from './CaseSelector.jsx';
-import ConclusionPanel from './ConclusionPanel.jsx';
-import IntroPanel, { HERO_BG } from './IntroPanel.jsx';
+import SummaryPanel from './SummaryPanel.jsx';
+import IntroPanel from './IntroPanel.jsx';
 import LanguageCard from './LanguageCard.jsx';
 import SharedPanel from './SharedPanel.jsx';
-import ComparisonTiles, { MODEL_COLOURS } from './ComparisonTiles.jsx';
+import ComparisonTiles from './ComparisonTiles.jsx';
 import ScoresTable from './ScoresTable.jsx';
 import ModelPanel from './ModelPanel.jsx';
 import Section, { SubSection, Eyebrow } from './Section.jsx';
-import arenaData from '../data/arena-data.json';
-import { AUTHOR_NAME, AUTHOR_GITHUB } from '../lib/links.js';      //Built by scripts/build_viewer_data.py; bundled at build time, so no fetch and no network
+import arenaData from '../data/arena-data.json';      //Built by scripts/build_viewer_data.py; bundled at build time, so no fetch and no network
+import { C, SUNSET, MODEL_COLOURS, HERO_BG } from '../lib/design.js';
 
 //CONSTANT: the case shown first (brief: a known retrieval miss, so the page opens on a finding)
 const DEFAULT_CASE_ID = 'c-positive-form';
@@ -47,28 +47,20 @@ function PastResultsPage({ data = arenaData }) {
       {/* 01 START HERE: the instruction first, then the question picker (the question is the control);
           the card matches the answer cards (output) in band 04 */}
       <Band id="start" step="01" first from={SUNSET[0]} to={SUNSET[1]} label="Choose a test question">
-        <Eyebrow color="#1D4ED8">Start here</Eyebrow>
+        <Eyebrow color={C.accentDark}>Start here</Eyebrow>
         <Typography variant="h3" sx={{ marginBottom: 1 }}>Choose one of {meta.case_count} test questions</Typography>
         <Typography variant="body1" color="text.secondary" sx={{ marginBottom: 3, maxWidth: '72ch' }}>
-          Click the question below to choose another. Every section underneath updates to that question.
+          Pick a question to explore one of the {meta.case_count} golden test cases.
         </Typography>
 
         <LanguageCard
           label={`Question sent to ${meta.models.join(' and ')}`}
           colours={MODEL_COLOURS.slice(0, meta.models.length)}
-          action={<Typography variant="body2" sx={{ color: '#1D4ED8', fontWeight: 600 }}>Click to change</Typography>}
+          action={<Typography variant="body2" sx={{ color: C.accentDark, fontWeight: 600 }}>Click to change</Typography>}
           sx={{ height: 'auto' }}
         >
           <CaseSelector cases={cases} value={selectedId} onChange={setSelectedId} />
 
-          {/* TEST DETAILS as labelled pills */}
-          {selected && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, marginTop: 1.5, paddingLeft: 1 }}>
-              <Chip size="small" variant="outlined" label={`Test: ${selected.id}`} />
-              <Chip size="small" variant="outlined" label={`Category: ${selected.category}`} />
-              <Chip size="small" variant="outlined" label={`Expected: ${selected.behaviour}`} />
-            </Box>
-          )}
         </LanguageCard>
       </Band>
 
@@ -87,7 +79,7 @@ function PastResultsPage({ data = arenaData }) {
 
             {/* 02 SUMMARY */}
             <Band step="02" from={SUNSET[1]} to={SUNSET[2]} label="Summary">
-              <ConclusionPanel caseData={selected} modelNames={meta.models} />
+              <SummaryPanel caseData={selected} modelNames={meta.models} />
             </Band>
 
             {/* 03 SHARED RETRIEVAL */}
@@ -105,10 +97,7 @@ function PastResultsPage({ data = arenaData }) {
                 {/* PURPOSE: Two model columns side by side; stacked on narrow screens
                     SOURCE: https://github.com/csdurkin/WebProgramming_ReactGraphQL_LibraryApp/blob/main/react_client/src/components/Search.jsx (Grid container / Grid item xs sm md pattern, adapted)
                     AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor */}
-                <SubSection
-                  title="Answers"
-                  action={<Chip label="Output" size="small" variant="outlined" sx={{ borderColor: '#9A3412', color: '#9A3412', fontWeight: 700, letterSpacing: '0.06em' }} />}
-                >
+                <SubSection title="Answers">
                   <Grid container spacing={2}>
                     {meta.models.map((name, i) => (
                       <Grid item xs={12} md={6} key={name}>
