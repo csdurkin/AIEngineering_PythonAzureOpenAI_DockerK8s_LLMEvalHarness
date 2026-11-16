@@ -95,7 +95,9 @@ function verdictSentence(names, models, limitCount) {
 }
 
 //SMALL PARTS
-const Swatch = ({ colour }) => <Box sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: colour, flexShrink: 0 }} />;
+const Swatch = ({ colour, className }) => (   // className: so a Chip can place it as its icon
+  <Box className={className} sx={{ width: 10, height: 10, borderRadius: '2px', backgroundColor: colour, flexShrink: 0 }} />
+);
 const ModelHead = ({ name, colour }) => (
   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, whiteSpace: 'nowrap' }}><Swatch colour={colour} />{name}</Box>
 );
@@ -298,6 +300,7 @@ function ReportPage({ onOpenCase, data = arenaData }) {
                     const r = c.models[n];
                     return (
                       <Chip key={n} variant="outlined" size="small" icon={<Swatch colour={MODEL_COLOURS[i]} />}
+                        sx={{ height: 28, '& .MuiChip-icon': { marginLeft: 1.25, marginRight: 0 }, '& .MuiChip-label': { paddingLeft: 1, paddingRight: 1.5 } }}   // swatch clear of the edge; even space either side
                         label={`${n}: ${r.status} · ${fmt(r.accuracy, 'pct')}${r.safety_passed ? '' : ' · safety fail'}`} />
                     );
                   })}
