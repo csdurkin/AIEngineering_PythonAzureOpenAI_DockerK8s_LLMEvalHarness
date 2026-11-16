@@ -3,8 +3,9 @@
   #Purpose: The results viewer's question server. The Run prompts page sends a question here; the server asks both models
   #         through the harness's agent, scores each answer, and returns them in the same shape as results.json.
   #Endpoints:
-      #GET  /api/health : is the server up, and is it using the mock or Azure
-      #POST /api/ask    : {"question": "..."} -> both models' answers, scores, time and cost
+      #GET  /api/health   : is the server up, and is it using the mock or Azure
+      #POST /api/retrieve : {"question": "..."} -> every rule scored against it, which are sent, kept and dropped words (free, no model call)
+      #POST /api/ask      : {"question": "..."} -> both models' answers, scores, time and cost
   #Provider: LLM_PROVIDER=mock (default; free, scripted replies) or LLM_PROVIDER=azure (real, paid; needs the Azure keys in .env)
   #Guards: question length limit; per-visitor rate limit; a spending cap for the server's lifetime (azure only)
   #Run: api/run.sh  (or: flask --app api.app run --port 5001)
@@ -14,7 +15,7 @@
 #         and a threading.Lock guarding shared state; forum posts and users replaced by the harness's agents and a rate limit)
 #AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor
 #Reuses from the harness (imported, not copied): cli._load_env / _client (build mock or Azure clients from models.yaml),
-#        agent.RagAgent / load_chunks, pricing.load_models, plus api/scoring.py
+#        agent.RagAgent / load_chunks, pricing.load_models, plus api/scoring.py and api/retrieval.py
 
 #Authorship: drafted by Claude; reviewed by Connor.
 
@@ -37,6 +38,7 @@ from llm_eval.cli import _client, _load_env                     # private helper
 from llm_eval.pricing import load_models
 from llm_eval.providers import mock_agent_handler, mock_judge_handler
 
+from api.retrieval import load_titles, retrieve_scored, split_query
 from api.scoring import answer_and_score
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -58,6 +60,7 @@ app = Flask(__name__)
 #  SHARED STATE: built once at start-up
 models = load_models(ROOT / "config" / "models.yaml")
 chunks = load_chunks(ROOT / "data" / "docs")
+titles = load_titles(ROOT / "data" / "docs")                      # display only; retrieval does not use them
 agents = {
     name: RagAgent(_client(PROVIDER, dep, models, mock_agent_handler, "mock-agent"), chunks)
     for name, dep in AGENTS.items()
@@ -88,6 +91,23 @@ def allow(visitor: str) -> str | None:
 
 
 
+#  READ QUESTION: the question from a JSON body like {"question": "..."}; returns (question, None) or (None, error response)
+def read_question():
+    data = request.get_json(silent=True)                        # pull JSON data from the HTTP request; None if the body is not JSON
+    if not isinstance(data, dict) or "question" not in data:
+        return None, (jsonify({"err": "Bad Request: send JSON like {\"question\": \"...\"}."}), 400)
+    question = data["question"]                                 # access the value at key 'question'
+
+    #VALIDATION: a non-empty string, within the length limit
+    if not isinstance(question, str) or not question.strip():
+        return None, (jsonify({"err": "Question must be non-empty text."}), 400)
+    question = question.strip()
+    if len(question) > MAX_QUESTION:
+        return None, (jsonify({"err": f"Question is too long: the limit is {MAX_QUESTION} characters."}), 400)
+    return question, None
+
+
+
 #C. ENDPOINTS
 
 # ENDPOINT 1: GET HEALTH
@@ -96,23 +116,30 @@ def health():
     return jsonify({"status": "ok", "provider": PROVIDER, "models": list(AGENTS), "judge": JUDGE})
 
 
-# ENDPOINT 2: POST ASK
+# ENDPOINT 2: POST RETRIEVE
+    #Purpose: the retrieval breakdown for the page's step 03, from the same chunks and settings the agents use
+    #No rate limit: it calls no model, so it costs nothing
+@app.route("/api/retrieve", methods=["POST"])
+def retrieve():
+    question, refusal = read_question()
+    if refusal:
+        return refusal
+    return jsonify({
+        "question": question,
+        "query": split_query(question),
+        "retrieval": retrieve_scored(question, chunks, titles),
+    })
+
+
+# ENDPOINT 3: POST ASK
 @app.route("/api/ask", methods=["POST"])
 def ask():
     global spent_usd
 
     try:
-        data = request.get_json(silent=True)                    # pull JSON data from the HTTP request; None if the body is not JSON
-        if not isinstance(data, dict):
-            return jsonify({"err": "Bad Request: send JSON like {\"question\": \"...\"}."}), 400
-        question = data["question"]                             # access the value at key 'question'
-
-        #VALIDATION: a non-empty string, within the length limit
-        if not isinstance(question, str) or not question.strip():
-            return jsonify({"err": "Question must be non-empty text."}), 400
-        question = question.strip()
-        if len(question) > MAX_QUESTION:
-            return jsonify({"err": f"Question is too long: the limit is {MAX_QUESTION} characters."}), 400
+        question, refusal = read_question()
+        if refusal:
+            return refusal
 
         #GUARDS: rate limit and spending cap
         refusal = allow(request.remote_addr or "unknown")

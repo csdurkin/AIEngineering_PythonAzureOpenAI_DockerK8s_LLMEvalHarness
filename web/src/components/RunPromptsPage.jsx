@@ -1,11 +1,12 @@
 // PURPOSE: "Run prompts" section. Mirrors Past results, but the input is a text area. On Ask:
-//            1. retrieval runs at once in the browser (lib/retrieval.js), so step 03 fills straight away
-//            2. the question goes to the question server (api/app.py), which asks both models through the harness's agent
-//               and scores each answer; step 04 shows the answers, tiles and scores as Past results does
+//            1. the question server (api/app.py) returns its retrieval breakdown (POST /api/retrieve, no model call),
+//               so step 03 fills within moments
+//            2. at the same time it asks both models through the harness's agent and scores each answer (POST /api/ask);
+//               step 04 shows the answers, tiles and scores as Past results does
 //          Layout: hero, 01 start here (text area), 02 summary, 03 shared retrieval, 04 model output
 // SOURCE: new
 // AUTHORSHIP: drafted by Claude; reviewed by Connor
-// SHAPE: a typed question becomes the same shape as a case in arena-data.json (asCase); the server fills in `models`
+// SHAPE: a typed question becomes the same shape as a case in arena-data.json (typedCase), so the same panels can show it
 
 //IMPORTS
 import { useMemo, useRef, useState } from 'react';
@@ -19,8 +20,7 @@ import ComparisonTiles from './ComparisonTiles.jsx';
 import ScoresTable from './ScoresTable.jsx';
 import { outcome, separation, retrievalSummary, retrievalCheck } from '../lib/summary.js';
 import Section, { SubSection, Eyebrow } from './Section.jsx';
-import { asCase, RETRIEVAL_SETTINGS } from '../lib/retrieval.js';
-import { askModels } from '../lib/api.js';
+import { askModels, retrieveQuestion } from '../lib/api.js';
 import { REPO_URL } from '../lib/links.js';
 import { SERIF_FONT } from '../muiStyling/theme.js';
 import arenaData from '../data/arena-data.json';
@@ -28,6 +28,7 @@ import { C, SUNSET, MODEL_COLOURS, HERO_BG } from '../lib/design.js';
 
 //CONSTANTS
 const MODELS = arenaData.meta.models;                                    // the same two models as the past run
+const RETRIEVAL_SETTINGS = arenaData.meta.retrieval;                     // k, min_overlap, chunk_count: the harness's settings, written by build_viewer_data.py
 const MAX_LENGTH = 500;                                                  // matches MAX_QUESTION in api/app.py
 const EXAMPLES = [                                                       // not golden questions, so they show something new
   'Should I write my report in the active voice?',
@@ -35,33 +36,53 @@ const EXAMPLES = [                                                       // not 
   'How do I keep related words together in a sentence?',
 ];
 
+//  TYPED CASE: a typed question in the same shape as one case in arena-data.json; no answer key, so no expected facts or source
+function typedCase(question, retrieved, models) {
+  return {
+    id: 'your-question',
+    category: 'your question',
+    behaviour: 'unknown',
+    question,
+    expected_facts: [],
+    expected_source: null,
+    query: retrieved.query,
+    retrieval: retrieved.retrieval,
+    models,
+  };
+}
+
 function RunPromptsPage() {
 
   //STATE MANAGEMENT
     //draft: what is in the text area; asked: the question last run
-    //phase: 'idle' | 'loading' | 'done' | 'error'; reply: the server's answer; error: a readable message
+    //phase: 'idle' | 'loading' | 'done' | 'error'; retrieved: the server's retrieval breakdown; reply: the models' answers; error: a readable message
     const [draft, setDraft] = useState('');
     const [asked, setAsked] = useState('');
     const [phase, setPhase] = useState('idle');
+    const [retrieved, setRetrieved] = useState(null);
     const [reply, setReply] = useState(null);
     const [error, setError] = useState('');
     const latest = useRef(0);                                            // ignore replies to an older question
 
-    //CASE: browser retrieval at once; the server's models once they arrive
+    //CASE: retrieval as soon as it arrives; the models once they have answered
     const caseData = useMemo(() => {
-      if (!asked) return null;
-      const base = asCase(asked);
-      return phase === 'done' && reply ? { ...base, models: reply.models } : base;
-    }, [asked, phase, reply]);
+      if (!asked || !retrieved) return null;
+      return typedCase(asked, retrieved, phase === 'done' && reply ? reply.models : {});
+    }, [asked, retrieved, phase, reply]);
 
-    //ASK: retrieval shows straight away; the models are asked in the background
+    //ASK: both requests start together; retrieval needs no model, so it returns first and step 03 fills while the models answer
     const run = async (question = draft) => {
       const q = question.trim();
       if (!q || phase === 'loading') return;
       const id = ++latest.current;
-      setDraft(q); setAsked(q); setPhase('loading'); setReply(null); setError('');
+      setDraft(q); setAsked(q); setPhase('loading'); setRetrieved(null); setReply(null); setError('');
       try {
-        const result = await askModels(q);
+        const answers = askModels(q);
+        answers.catch(() => {});                                         // handled below; stops an "unhandled rejection" if retrieval fails first
+        const breakdown = await retrieveQuestion(q);
+        if (id !== latest.current) return;
+        setRetrieved(breakdown);
+        const result = await answers;
         if (id === latest.current) { setReply(result); setPhase('done'); }
       } catch (e) {
         if (id === latest.current) { setError(e.message); setPhase('error'); }
@@ -151,6 +172,14 @@ function RunPromptsPage() {
             ))}
           </Box>
         </LanguageCard>
+
+        {/* ERROR BEFORE RETRIEVAL: nothing to show below yet (usually the server is not running), so say so here */}
+        {phase === 'error' && !caseData && (
+          <Alert severity="error" sx={{ marginTop: 3, borderRadius: 3 }}
+            action={<Button color="inherit" size="small" onClick={() => run(asked)}>Try again</Button>}>
+            {error}
+          </Alert>
+        )}
       </Band>
 
       {/* RESULTS: after the first ask */}
@@ -173,7 +202,7 @@ function RunPromptsPage() {
               </Typography>
             </Band>
 
-            {/* 03 SHARED RETRIEVAL: the same panel as Past results, fed by the browser's retrieval */}
+            {/* 03 SHARED RETRIEVAL: the same panel as Past results, fed by the server's retrieval breakdown */}
             <Band step="03" from={SUNSET[2]} to={SUNSET[3]} label="Shared retrieval">
               <SharedPanel caseData={caseData} retrievalMeta={RETRIEVAL_SETTINGS} />
             </Band>

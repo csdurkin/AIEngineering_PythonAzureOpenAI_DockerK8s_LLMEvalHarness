@@ -1,14 +1,14 @@
-// PURPOSE: Send a typed question to the question server (api/app.py) and return both models' scored answers
+// PURPOSE: Send a typed question to the question server (api/app.py): its retrieval breakdown, and both models' scored answers
 // SOURCE: new
 // AUTHORSHIP: drafted by Claude; reviewed by Connor
 // NOTE: "/api" is forwarded to the Flask server by vite.config.js in development, so the page and server share one address
 
-// ASK MODELS: POST {question}; returns { question, models: { name: {...} }, meta: { provider, judge_model, run_at } }
+// POST QUESTION: send {question} to one endpoint and return the JSON reply
 // Throws an Error with a readable message when the server is unreachable or refuses the question
-export async function askModels(question) {
+async function postQuestion(path, question) {
   let response;
   try {
-    response = await fetch('/api/ask', {
+    response = await fetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question }),
@@ -23,3 +23,9 @@ export async function askModels(question) {
   }
   return body;
 }
+
+// RETRIEVE: returns { question, query: { kept, dropped }, retrieval: [rows, best first] }; free, no model is called
+export const retrieveQuestion = (question) => postQuestion('/api/retrieve', question);
+
+// ASK MODELS: returns { question, models: { name: {...} }, meta: { provider, judge_model, run_at } }
+export const askModels = (question) => postQuestion('/api/ask', question);

@@ -2,15 +2,12 @@
 
   #Purpose: Build the results viewer's data file (web/src/data/arena-data.json) from the 4 October 2026 evidence.
   #Primary Components:
-      #retrieve_scored (function): the harness retrieve(), but it keeps every chunk with its score and shared words, so the viewer can show what was sent and what lost out
-      #load_titles (function): each rule's title from its header line, for display
-      #split_query (function): which question words were kept and which were dropped as stop words
       #load_results (function): reads both results.json files, keyed by display model name
       #check_integrity (function): proves retrieve_scored reproduces the 4 October run; stops on any drift
       #build (function): assembles one record per case, plus top-level meta
-      #build_retrieval_kit (function): the rules, titles, stop words and settings the browser needs to run retrieval itself
   #Run: .venv/bin/python scripts/build_viewer_data.py
-  #Output: web/src/data/arena-data.json and web/src/data/retrieval-kit.json (committed, so the web build needs no Python)
+  #Reuses: retrieve_scored, load_titles, split_query (api/retrieval.py) and answer_status (api/scoring.py), shared with the question server
+  #Output: web/src/data/arena-data.json (committed, so the web build needs no Python)
   #Note: build step only. Reads evidence; never calls a model.
 
 #Authorship: drafted by Claude; reviewed by Connor.
@@ -21,16 +18,15 @@
 
 #  IMPORTS (Libraries)
 import json
-import re
 import sys
 from pathlib import Path
 
 #  IMPORTS (Harness): reused, not copied, so the viewer always matches the harness
-    #Note: _STOPWORDS is private to agent.py (leading underscore). Imported on purpose so the viewer follows any change to the stop-word list.
-from llm_eval.agent import DEFAULT_K, DEFAULT_MIN_OVERLAP, _STOPWORDS, Chunk, load_chunks, tokenise
+from llm_eval.agent import DEFAULT_K, DEFAULT_MIN_OVERLAP, load_chunks
 from llm_eval.cases import Case, load_cases
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   #repo root, so the api package can be imported
+from api.retrieval import load_titles, retrieve_scored, split_query   #shared with the question server
 from api.scoring import answer_status                              #shared with the question server
 
 #  CONSTANTS: PATHS
@@ -40,7 +36,6 @@ EVIDENCE_DIR = ROOT / "evidence" / RUN_DATE
 CASES_FILE = ROOT / "data" / "cases.yaml"
 DOCS_DIR = ROOT / "data" / "docs"
 OUTPUT_FILE = ROOT / "web" / "src" / "data" / "arena-data.json"
-KIT_FILE = ROOT / "web" / "src" / "data" / "retrieval-kit.json"     #For the Run prompts page: lets the browser run retrieval on any question
 
 #  CONSTANT: MODELS
     #Purpose: evidence folder name -> the agent_model recorded in its results.json; the folder name is the display name
@@ -61,69 +56,7 @@ MODEL_FIELDS = [
 #B. FUNCTION DEFINITIONS
 
 
-#  RETRIEVE SCORED
-    #Purpose: Score every chunk against the question and return all of them, best first, with what retrieve() would have done to each
-    #SOURCE: src/llm_eval/agent.py retrieve() (adapted: keeps every chunk and its score instead of only the top k)
-    #Output per chunk: rank, source, title, text, matched (the shared keywords), overlap (how many), sent (passed to the model), tie (file order decided whether it was sent)
-    #Why it matches retrieve(): retrieve() filters to overlap >= min_overlap, then takes the first k after a stable sort.
-    #   Sorting all chunks the same way and marking the first k that pass the filter gives the same chunks. check_integrity() proves it.
-def retrieve_scored(question: str, chunks: list[Chunk], titles: dict[str, str], k: int = DEFAULT_K, min_overlap: int = DEFAULT_MIN_OVERLAP) -> list[dict]:
-    q_tokenised = tokenise(question)
-
-    scored = []                                                 #(shared words, chunk) pairs for every chunk, not just matches
-    for chunk in chunks:
-        chunk_tokenised = tokenise(chunk.text)
-        scored.append((q_tokenised & chunk_tokenised, chunk))   #Keep the shared words themselves; retrieve() keeps only their count
-
-    scored.sort(key=lambda pair: len(pair[0]), reverse=True)    #Same stable sort as retrieve(): equal scores keep file order
-
-    rows = []
-    for position, (matched, chunk) in enumerate(scored):
-        score = len(matched)
-        rows.append({
-            "rank": position + 1,
-            "source": chunk.source,
-            "title": titles.get(chunk.source, ""),
-            "text": chunk.text,
-            "matched": sorted(matched),
-            "overlap": score,
-            "sent": position < k and score >= min_overlap,      #In the top k AND a strong enough match
-            "tie": False,                                       #Filled in below
-        })
-
-    #TIES: a chunk is in a tie when another chunk with the same overlap landed on the other side of the "sent" line.
-    #      Only matches strong enough to be sent can tie; below min_overlap nothing is sent whatever the order.
-    for row in rows:
-        if row["overlap"] < min_overlap:
-            continue
-        row["tie"] = any(
-            other["overlap"] == row["overlap"] and other["sent"] != row["sent"]
-            for other in rows
-        )
-
-    return rows
-
-
-#  LOAD TITLES
-    #Purpose: Read each rule's title from its first header line, e.g. "# Rule 18: Place the emphatic words of a sentence at the end"
-    #Why separate: load_chunks() skips "#" lines, so the title never reaches a chunk. Display only; retrieval does not use it.
-def load_titles(docs_dir: Path) -> dict[str, str]:
-    titles = {}
-    for path in sorted(docs_dir.glob("*.md")):
-        first_line = path.read_text(encoding="utf-8").split("\n", 1)[0]
-        match = re.match(r"#\s*Rule\s+\d+:\s*(.+)", first_line)        #Text after "Rule N:"
-        titles[path.name] = match.group(1).strip() if match else ""
-    return titles
-
-
-#  SPLIT QUERY
-    #Purpose: Show which question words retrieval used and which it threw away as stop words
-    #Note: same regular expression as tokenise(), so "kept" equals tokenise(question)
-def split_query(question: str) -> dict:
-    words = re.findall(r"[a-z0-9£]+", question.lower())
-    kept = tokenise(question)
-    dropped = {word for word in words if word in _STOPWORDS}
-    return {"kept": sorted(kept), "dropped": sorted(dropped)}
+#  RETRIEVE SCORED, LOAD TITLES, SPLIT QUERY: imported from api/retrieval.py (shared with the question server)
 
 
 #  ANSWER STATUS: imported from api/scoring.py (shared with the question server)
@@ -200,21 +133,6 @@ def build(cases: list[Case], retrievals: dict, results: dict) -> dict:
     return {"meta": meta, "cases": records}
 
 
-
-#  BUILD RETRIEVAL KIT
-    #Purpose: Everything web/src/lib/retrieval.js needs to repeat retrieve_scored() in the browser for a question someone types
-    #Note: the token pattern is the one tokenise() uses; the JavaScript port uses the same pattern, and a parity check compares them on all golden questions
-def build_retrieval_kit(chunks: list[Chunk], titles: dict[str, str]) -> dict:
-    return {
-        "k": DEFAULT_K,
-        "min_overlap": DEFAULT_MIN_OVERLAP,
-        "token_pattern": "[a-z0-9£]+",
-        "stopwords": sorted(_STOPWORDS),
-        "chunks": [{"source": c.source, "title": titles.get(c.source, ""), "text": c.text} for c in chunks],
-    }
-
-
-
 #C. MAIN
 
 def main() -> None:
@@ -230,11 +148,8 @@ def main() -> None:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    KIT_FILE.write_text(json.dumps(build_retrieval_kit(chunks, titles), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
     print(f"{len(cases)} cases, {len(results)} models, integrity OK")
     print(f"Wrote {OUTPUT_FILE.relative_to(ROOT)}")
-    print(f"Wrote {KIT_FILE.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
