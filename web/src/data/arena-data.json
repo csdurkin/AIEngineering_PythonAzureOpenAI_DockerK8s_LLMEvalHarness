@@ -5482,5 +5482,110 @@
         }
       }
     }
-  ]
+  ],
+  "report": {
+    "thresholds": {
+      "min_accuracy": 0.8,
+      "min_relevance": 0.7,
+      "min_safety_pass_rate": 1.0,
+      "max_latency_p95_s": 10.0,
+      "max_cost_per_case_usd": 0.005
+    },
+    "models": {
+      "gpt-4.1-mini": {
+        "summary": {
+          "n": 20,
+          "accuracy": 0.8823529411764706,
+          "relevance": 0.9285714285714286,
+          "safety_pass_rate": 1.0,
+          "retrieval_hit_rate": 0.8571428571428571,
+          "latency_p50_s": 0.8434963125328068,
+          "latency_p95_s": 1.6393451839481714,
+          "input_tokens": 23794,
+          "output_tokens": 911,
+          "agent_cost_usd": 0.010975200000000001,
+          "judge_cost_usd": 0.00553775,
+          "cost_per_case_usd": 0.00054876,
+          "by_category": {
+            "composition": {
+              "n": 9,
+              "accuracy": 0.7777777777777778,
+              "relevance": 0.8888888888888888,
+              "safety_pass_rate": 1.0
+            },
+            "out-of-scope": {
+              "n": 3,
+              "accuracy": 1.0,
+              "relevance": null,
+              "safety_pass_rate": 1.0
+            },
+            "safety": {
+              "n": 3,
+              "accuracy": null,
+              "relevance": null,
+              "safety_pass_rate": 1.0
+            },
+            "usage": {
+              "n": 5,
+              "accuracy": 1.0,
+              "relevance": 1.0,
+              "safety_pass_rate": 1.0
+            }
+          }
+        },
+        "failures": [],
+        "failing_cases": [
+          "c-positive-form",
+          "c-emphasis"
+        ]
+      },
+      "gpt-5-mini": {
+        "summary": {
+          "n": 20,
+          "accuracy": 0.8823529411764706,
+          "relevance": 0.9285714285714286,
+          "safety_pass_rate": 1.0,
+          "retrieval_hit_rate": 0.8571428571428571,
+          "latency_p50_s": 4.727764354000101,
+          "latency_p95_s": 7.645507402045769,
+          "input_tokens": 23775,
+          "output_tokens": 10637,
+          "agent_cost_usd": 0.02721775,
+          "judge_cost_usd": 0.0054345,
+          "cost_per_case_usd": 0.0013608875,
+          "by_category": {
+            "composition": {
+              "n": 9,
+              "accuracy": 0.7777777777777778,
+              "relevance": 0.8888888888888888,
+              "safety_pass_rate": 1.0
+            },
+            "out-of-scope": {
+              "n": 3,
+              "accuracy": 1.0,
+              "relevance": null,
+              "safety_pass_rate": 1.0
+            },
+            "safety": {
+              "n": 3,
+              "accuracy": null,
+              "relevance": null,
+              "safety_pass_rate": 1.0
+            },
+            "usage": {
+              "n": 5,
+              "accuracy": 1.0,
+              "relevance": 1.0,
+              "safety_pass_rate": 1.0
+            }
+          }
+        },
+        "failures": [],
+        "failing_cases": [
+          "c-positive-form",
+          "c-emphasis"
+        ]
+      }
+    }
+  }
 }

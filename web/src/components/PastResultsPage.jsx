@@ -26,12 +26,14 @@ const DEFAULT_CASE_ID = 'c-positive-form';
 const longDate = (iso) =>
   new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-function PastResultsPage({ data = arenaData }) {
+// Props: initialCaseId (optional; the case to open on, e.g. from the Report page), data (defaults to arena-data.json)
+function PastResultsPage({ initialCaseId, data = arenaData }) {
 
   //STATE MANAGEMENT
     //selectedId: the case chosen in the dropdown; falls back to the first case if the default is missing
     const { cases, meta } = data;
-    const startId = cases.some((c) => c.id === DEFAULT_CASE_ID) ? DEFAULT_CASE_ID : cases[0]?.id ?? '';
+    const wanted = initialCaseId ?? DEFAULT_CASE_ID;
+    const startId = cases.some((c) => c.id === wanted) ? wanted : cases[0]?.id ?? '';
     const [selectedId, setSelectedId] = useState(startId);
 
     const selected = cases.find((c) => c.id === selectedId);

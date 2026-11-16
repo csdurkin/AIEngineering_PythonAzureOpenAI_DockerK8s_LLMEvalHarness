@@ -5,6 +5,7 @@
       #load_results (function): reads both results.json files, keyed by display model name
       #check_integrity (function): proves retrieve_scored reproduces the 4 October run; stops on any drift
       #build (function): assembles one record per case, plus top-level meta
+      #build_report (function): each model's overall summary, threshold checks and failing cases, for the Report page
   #Run: .venv/bin/python scripts/build_viewer_data.py
   #Reuses: retrieve_scored, load_titles, split_query (api/retrieval.py) and answer_status (api/scoring.py), shared with the question server
   #Output: web/src/data/arena-data.json (committed, so the web build needs no Python)
@@ -21,9 +22,12 @@ import json
 import sys
 from pathlib import Path
 
+import yaml
+
 #  IMPORTS (Harness): reused, not copied, so the viewer always matches the harness
 from llm_eval.agent import DEFAULT_K, DEFAULT_MIN_OVERLAP, load_chunks
 from llm_eval.cases import Case, load_cases
+from llm_eval.runner import check_thresholds                     #the harness's own pass/fail gate
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   #repo root, so the api package can be imported
 from api.retrieval import load_titles, retrieve_scored, split_query   #shared with the question server
@@ -34,6 +38,7 @@ ROOT = Path(__file__).resolve().parent.parent                   #Repo root, so t
 RUN_DATE = "2026-10-04"
 EVIDENCE_DIR = ROOT / "evidence" / RUN_DATE
 CASES_FILE = ROOT / "data" / "cases.yaml"
+THRESHOLDS_FILE = ROOT / "config" / "thresholds.yaml"
 DOCS_DIR = ROOT / "data" / "docs"
 OUTPUT_FILE = ROOT / "web" / "src" / "data" / "arena-data.json"
 
@@ -71,7 +76,7 @@ def load_results() -> dict:
         data = json.loads((EVIDENCE_DIR / name / "results.json").read_text(encoding="utf-8"))
         if data["meta"]["agent_model"] != agent_model:
             sys.exit(f"{name}/results.json is for {data['meta']['agent_model']}, expected {agent_model}")
-        results[name] = {"meta": data["meta"], "cases": {c["id"]: c for c in data["cases"]}}
+        results[name] = {"meta": data["meta"], "summary": data["summary"], "failures": data["failures"], "cases": {c["id"]: c for c in data["cases"]}}
     return results
 
 
@@ -133,6 +138,32 @@ def build(cases: list[Case], retrievals: dict, results: dict) -> dict:
     return {"meta": meta, "cases": records}
 
 
+#  BUILD REPORT
+    #Purpose: Everything the Report page shows: each model's overall summary (as results.json recorded it), whether it passed
+    #         each threshold, and which cases it failed
+    #Thresholds: checked with the harness's check_thresholds(), and the result must equal the failures results.json recorded
+    #Failing cases: SOURCE src/llm_eval/report.py "Failing cases" (same rule: below full accuracy, or failed safety); written
+    #               inline there, so it is repeated here rather than imported
+    #Output: {"thresholds": {...}, "models": {name: {"summary", "failures", "failing_cases"}}}
+def build_report(results: dict, thresholds: dict) -> dict:
+    problems = []
+    models = {}
+    for name, result in results.items():
+        failures = check_thresholds(result["summary"], thresholds)
+        if failures != result["failures"]:
+            problems.append(f"{name}: thresholds now give {failures}, run recorded {result['failures']}")
+        failing = [
+            case_id for case_id, c in result["cases"].items()
+            if (c["accuracy"] is not None and c["accuracy"] < 1) or not c["safety_passed"]
+        ]
+        models[name] = {"summary": result["summary"], "failures": failures, "failing_cases": failing}
+
+    if problems:
+        sys.exit("Report check FAILED; thresholds.yaml no longer gives the recorded verdict:\n  " + "\n  ".join(problems))
+    return {"thresholds": thresholds, "models": models}
+
+
+
 #C. MAIN
 
 def main() -> None:
@@ -145,10 +176,11 @@ def main() -> None:
     check_integrity(cases, retrievals, results)
 
     data = build(cases, retrievals, results)
+    data["report"] = build_report(results, yaml.safe_load(THRESHOLDS_FILE.read_text(encoding="utf-8")))
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    print(f"{len(cases)} cases, {len(results)} models, integrity OK")
+    print(f"{len(cases)} cases, {len(results)} models, integrity OK, report verdicts match")
     print(f"Wrote {OUTPUT_FILE.relative_to(ROOT)}")
 
 

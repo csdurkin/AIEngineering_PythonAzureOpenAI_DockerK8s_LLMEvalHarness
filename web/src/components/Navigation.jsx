@@ -1,12 +1,19 @@
-// PURPOSE: Top menu bar; slim, frosted and sticky. Wordmark on the left, the two sections as a segmented toggle on the right
+// PURPOSE: Top menu bar; slim, frosted and sticky. Wordmark on the left, the three sections as a segmented toggle on the right
 // SOURCE: https://github.com/csdurkin/WebProgramming_ReactGraphQL_LibraryApp/blob/main/react_client/src/components/Navigation.jsx (adapted: NavLink routes replaced by buttons that set the shown section, as the viewer is one page with no router; title and buttons changed; buttons grouped into a segmented toggle; bar made sticky and frosted)
 // AUTHORSHIP: original by Connor (MSc); adapted by Claude; reviewed by Connor
 
 import { AppBar, Toolbar, Button, Box, Typography } from '@mui/material';
 import { C } from '../lib/design.js';
 
+//HIDE ON PHONE: visually hidden below the sm breakpoint, but kept for screen readers (display: none would remove the h1 for them too)
+const HIDE_ON_PHONE = {
+    position: { xs: 'absolute', sm: 'static' }, width: { xs: '1px', sm: 'auto' }, height: { xs: '1px', sm: 'auto' },
+    overflow: { xs: 'hidden', sm: 'visible' }, clip: { xs: 'rect(0 0 0 0)', sm: 'auto' },
+};
+
 //SECTIONS: one entry per menu button; "key" is what App stores as the current section; "tag" is an optional small note
 const SECTIONS = [
+    { key: 'report', label: 'Report' },
     { key: 'past', label: 'Past results' },
     { key: 'run', label: 'Run prompts' },
 ];
@@ -32,7 +39,7 @@ function Navigation({ view, onChange }) {
                     {/* WORDMARK: a small sunset disc and the name */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
                             <Box aria-hidden="true" sx={{ width: 20, height: 20, borderRadius: '50%', background: `linear-gradient(180deg, ${C.apricot} 0%, ${C.orange} 100%)` }} />
-                            <Typography variant="h1" sx={{ fontSize: '1.125rem', color: C.rustDark }}>
+                            <Typography variant="h1" sx={{ fontSize: '1.125rem', color: C.rustDark, whiteSpace: 'nowrap', ...HIDE_ON_PHONE }}>   {/* hidden on phones so three tabs fit (still read by screen readers: it is the page's h1); the disc stays */}
                                 Agent Arena
                             </Typography>
                         </Box>
@@ -46,6 +53,7 @@ function Navigation({ view, onChange }) {
                                     className={view === key ? 'active' : ''}
                                     aria-current={view === key ? 'page' : undefined}
                                     onClick={() => onChange(key)}
+                                    sx={{ whiteSpace: 'nowrap', paddingX: { xs: 1.25, sm: 2 }, fontSize: { xs: '0.8125rem', sm: '0.875rem' } }}   // three tabs fit one line on a phone
                                 >
                                     {label}
                                     {tag && (

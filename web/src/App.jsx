@@ -12,13 +12,29 @@ import './App.css';     //Applies the root layout once, for the whole applicatio
 import Navigation from './components/Navigation.jsx';
 import RunPromptsPage from './components/RunPromptsPage.jsx';
 import PastResultsPage from './components/PastResultsPage.jsx';
+import ReportPage from './components/ReportPage.jsx';
 import Footer from './components/Footer.jsx';
 
 const App = () => {
 
   //STATE MANAGEMENT
-    //view: which section is shown ('run' or 'past'); opens on past results, the only built section
-    const [view, setView] = useState('past');
+    //view: which section is shown ('report', 'past' or 'run'); opens on the report, the overview
+    //pastCase: the case Past results opens on when the Report page links to one; null = its usual first case
+    const [view, setView] = useState('report');
+    const [pastCase, setPastCase] = useState(null);
+
+    //OPEN CASE: from the Report page's failing cases to that case on Past results, at the top of the page
+    const openCase = (id) => {
+      setPastCase(id);
+      setView('past');
+      window.scrollTo(0, 0);
+    };
+
+    //CHANGE VIEW: from the menu; Past results goes back to its usual first case
+    const changeView = (next) => {
+      setPastCase(null);
+      setView(next);
+    };
 
   return (
 
@@ -29,17 +45,20 @@ const App = () => {
         <div className="App">
 
           {/* MENU: Navigation receives the current view and a way to change it */}
-          <Navigation view={view} onChange={setView} />
+          <Navigation view={view} onChange={changeView} />
 
           {/*NOTES:
               - Replaces the Routes block: one page, no URL changes.
-              - Only the chosen section is drawn; the other is not rendered at all.
+              - Only the chosen section is drawn; the others are not rendered at all.
+              - key on Past results: a new case from the Report page starts it afresh on that case.
           */}
           <main>
-            {view === 'run' ? <RunPromptsPage /> : <PastResultsPage />}
+            {view === 'report' && <ReportPage onOpenCase={openCase} />}
+            {view === 'past' && <PastResultsPage key={pastCase ?? 'default'} initialCaseId={pastCase} />}
+            {view === 'run' && <RunPromptsPage />}
           </main>
 
-          {/* FOOTER: shared by both sections */}
+          {/* FOOTER: shared by all sections */}
           <Footer />
 
         </div>

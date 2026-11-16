@@ -4,6 +4,7 @@
 // AUTHORSHIP: drafted by Claude; reviewed by Connor
 // PAST RESULTS sentence: outcome + retrievalSentence + separation
 // RUN PROMPTS sentence:  retrievalSummary, then (once the models answer) outcome + separation + retrievalCheck
+// REPORT failing cases:  failureReason
 
 import { fmt, ratio } from './format.js';
 
@@ -35,7 +36,7 @@ export function retrievalSentence(caseData) {
 }
 
 //  RETRIEVAL SUMMARY (typed questions): which rules were sent, any tie, any dropped words
-//  settings: { k, min_overlap } from the retrieval kit
+//  settings: { k, min_overlap } from arena-data.json meta.retrieval
 export function retrievalSummary(caseData, { k, min_overlap: min }) {
   const sent = caseData.retrieval.filter((r) => r.sent);
   const parts = [];
@@ -63,9 +64,78 @@ export function separation(nameA, A, nameB, B) {
   return parts.length ? `${parts.join('; ')}.` : '';
 }
 
-//  RETRIEVAL CHECK (typed questions): the server's agent should send the same rules as the browser's retrieval; say so if not
+//  RETRIEVAL CHECK (typed questions): the agents (/api/ask) should send the same rules as the breakdown shown (/api/retrieve); say so if not
 export function retrievalCheck(caseData) {
-  const browser = caseData.retrieval.filter((r) => r.sent).map((r) => r.source).join(',');
-  const differ = Object.entries(caseData.models).filter(([, r]) => r.sources.join(',') !== browser).map(([name]) => name);
-  return differ.length ? `Note: the server's retrieval for ${listText(differ)} differed from this page's, so the rules data may be out of date.` : '';
+  const shown = caseData.retrieval.filter((r) => r.sent).map((r) => r.source).join(',');
+  const differ = Object.entries(caseData.models).filter(([, r]) => r.sources.join(',') !== shown).map(([name]) => name);
+  return differ.length ? `Note: the rules ${listText(differ)} received differ from the retrieval shown here; the server may have reloaded its rules mid-question.` : '';
+}
+
+
+//  ORDINAL: 1 -> "1st", 2 -> "2nd", 3 -> "3rd", 11 -> "11th"
+const ordinal = (n) => {
+  const tens = n % 100, ones = n % 10;
+  const suffix = tens >= 11 && tens <= 13 ? 'th' : ones === 1 ? 'st' : ones === 2 ? 'nd' : ones === 3 ? 'rd' : 'th';
+  return `${n}${suffix}`;
+};
+
+//  WHAT THEY DID: what a failing model did, in words that follow "Both models" or a model name
+const DID = {
+  answered: (sent) => `answered from the rules they were sent${sent.length ? ` (${listText(sent)})` : ''}`,
+  abstained: () => 'said the rules provided did not cover the question',
+  refused: () => 'refused',
+  blocked: () => "were blocked by Azure's content filter",
+};
+
+//  FAILURE REASON (Report page): why a case fell below full accuracy or failed safety, worked out from the case data
+//  e.g. "The expected rule, rule18.md (…), shared 3 words with the question but tied with rule06.md and rule10.md; only the top 2
+//        are sent, and file order put it 3rd. Both models said the rules provided did not cover the question."
+//  failedNames: the models that failed this case; settings: { k, min_overlap } from arena-data.json meta.retrieval
+export function failureReason(caseData, failedNames, { k, min_overlap: min }) {
+  const parts = [];
+  const failed = failedNames.map((name) => [name, caseData.models[name]]);
+
+  //SAFETY: name the reasons, model by model
+  for (const [name, r] of failed) {
+    if (!r.safety_passed) parts.push(`${name} failed the safety check: ${listText(r.safety_reasons)}.`);
+  }
+
+  const lowAccuracy = failed.filter(([, r]) => r.accuracy != null && r.accuracy < 1);
+  if (!lowAccuracy.length) return parts.join(' ');
+
+  //RETRIEVAL: was the rule with the answer sent, and if not, why not
+  const expected = caseData.expected_source;
+  const row = expected && caseData.retrieval.find((r) => r.source === expected);
+  const sent = caseData.retrieval.filter((r) => r.sent).map((r) => r.source);
+  const facts = caseData.expected_facts.map((f) => `"${f}"`);
+  if (row && !row.sent) {
+    const rule = `The expected rule, ${expected}${row.title ? ` (${row.title})` : ''},`;
+    const words = row.overlap === 1 ? '1 word' : `${row.overlap} words`;
+    if (row.overlap < min) {
+      parts.push(row.overlap === 0
+        ? `${rule} shared no words with the question, so it was not sent.`
+        : `${rule} was not sent: it shared only ${words} with the question (${listText(row.matched.map((w) => `"${w}"`))}), below the ${min}-word minimum.`);
+    } else if (row.tie) {
+      const rivals = caseData.retrieval.filter((r) => r.tie && r.source !== expected).map((r) => r.source);
+      parts.push(`${rule} shared ${words} with the question but tied with ${listText(rivals)}; only the top ${k} are sent, and file order put it ${ordinal(row.rank)}.`);
+    } else {
+      parts.push(`${rule} ranked ${ordinal(row.rank)}; only the top ${k} are sent.`);
+    }
+  } else if (row) {
+    parts.push(`The expected rule, ${expected}, was sent, but the answer did not include every expected fact (${listText(facts)}).`);
+  } else if (facts.length) {
+    parts.push(`The answer did not include every expected fact (${listText(facts)}).`);
+  }
+
+  //MODELS: what they did as a result; one sentence if they did the same thing
+  const missing = (r) => (r.status === 'answered' && r.accuracy === 0 && facts.length ? `, so their answers did not include ${listText(facts)}` : '');
+  const statuses = new Set(lowAccuracy.map(([, r]) => r.status));
+  if (statuses.size === 1) {
+    const [, r] = lowAccuracy[0];
+    const who = lowAccuracy.length === Object.keys(caseData.models).length && lowAccuracy.length > 1 ? 'Both models' : lowAccuracy[0][0];
+    parts.push(`${who} ${(DID[r.status] ?? (() => r.status))(sent)}${missing(r)}.`);
+  } else {
+    for (const [name, r] of lowAccuracy) parts.push(`${name} ${(DID[r.status] ?? (() => r.status))(sent)}.`);
+  }
+  return parts.join(' ');
 }
